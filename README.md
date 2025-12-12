@@ -47,7 +47,6 @@
 
 ### Backend & Database
 - **Supabase** (PostgreSQL) for database and authentication
-- **Express.js** for API endpoints (if needed)
 
 ### Mobile
 - **Android** (API 26+, Android 8.0+)
