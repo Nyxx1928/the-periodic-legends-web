@@ -1,6 +1,6 @@
 # The Periodic Legends (TPL) - Earth Science Adventure Platform
 
-![TPL Logo](src/Assets/Group%2017.png)
+![TPL Logo](src/Assets/Group%2017.png) https://tpl-web-copy.vercel.app/
 
 ## 🎓 Project Overview
 
