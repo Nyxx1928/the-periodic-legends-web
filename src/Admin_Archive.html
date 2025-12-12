@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Archive | TPL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="/config.local.js"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.10);
+            --glass-bg-dark: rgba(30, 32, 34, 0.85);
+            --border: rgba(255, 255, 255, 0.18);
+            --border-dark: rgba(60, 60, 60, 0.18);
+            --shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .glassmorphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-radius: 18px;
+            transition: all 0.3s ease-in-out;
+        }
+        .glassmorphism-dark {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-dark);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(250, 204, 21, 0.2);
+        }
+        .danger-zone {
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #facc15;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="glassmorphism px-6 py-4 md:px-12 flex justify-between items-center fixed top-0 w-full z-50">
+        <div class="flex items-center space-x-4">
+            <a href="index.html" class="flex items-center">
+                <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10">
+                <span class="ml-3 font-bold text-xl">TPL Admin</span>
+            </a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span id="adminName" class="text-yellow-500 hidden md:block"></span>
+            <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-12 px-4 md:px-12 max-w-7xl mx-auto">
+        <!-- Page Title -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">
+                <i class="fas fa-archive text-yellow-500 mr-3"></i>Data Archiving System
+            </h1>
+            <p class="text-gray-400">Manage and archive student data to optimize database storage</p>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glassmorphism p-6 stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Total Quiz Results</p>
+                        <p id="totalQuizResults" class="text-3xl font-bold text-yellow-500">-</p>
+                    </div>
+                    <i class="fas fa-clipboard-list text-4xl text-yellow-500 opacity-50"></i>
+                </div>
+            </div>
+            <div class="glassmorphism p-6 stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Total Quests</p>
+                        <p id="totalQuests" class="text-3xl font-bold text-yellow-500">-</p>
+                    </div>
+                    <i class="fas fa-tasks text-4xl text-yellow-500 opacity-50"></i>
+                </div>
+            </div>
+            <div class="glassmorphism p-6 stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Total Students</p>
+                        <p id="totalStudents" class="text-3xl font-bold text-yellow-500">-</p>
+                    </div>
+                    <i class="fas fa-users text-4xl text-yellow-500 opacity-50"></i>
+                </div>
+            </div>
+            <div class="glassmorphism p-6 stat-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-1">Database Size</p>
+                        <p id="dbSize" class="text-3xl font-bold text-yellow-500">-</p>
+                    </div>
+                    <i class="fas fa-database text-4xl text-yellow-500 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Archive Operations -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Export Data Section -->
+            <div class="glassmorphism p-6">
+                <h2 class="text-2xl font-bold mb-4">
+                    <i class="fas fa-download text-yellow-500 mr-2"></i>Export Data
+                </h2>
+                <p class="text-gray-400 text-sm mb-4">Export data to CSV/JSON format for backup</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Data Type</label>
+                        <select id="exportDataType" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            <option value="quiz_results">Quiz Results</option>
+                            <option value="quests">Player Quests</option>
+                            <option value="students">Students</option>
+                            <option value="achievements">Achievements</option>
+                            <option value="lessons">Lessons</option>
+                            <option value="all">All Data</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Export Mode</label>
+                        <select id="exportMode" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            <option value="all">Export All Data (No Date Filter)</option>
+                            <option value="before">Export Data Older Than (Before Date)</option>
+                            <option value="range">Export Data Between Dates (Date Range)</option>
+                            <option value="on">Export Data On Specific Date</option>
+                        </select>
+                        <p id="exportDateRangeMessage" class="text-xs text-gray-400 mt-1"></p>
+                    </div>
+                    
+                    <div id="exportBeforeSection" class="hidden">
+                        <label class="block text-sm text-gray-300 mb-2">Export Data Older Than</label>
+                        <input type="date" id="exportBeforeDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                        <p class="text-xs text-gray-400 mt-1">Exports all data before this date (not including the date itself)</p>
+                    </div>
+                    
+                    <div id="exportRangeSection" class="hidden">
+                        <label class="block text-sm text-gray-300 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Start Date</label>
+                                <input type="date" id="exportStartDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">End Date</label>
+                                <input type="date" id="exportEndDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Exports all data between these dates (inclusive)</p>
+                    </div>
+                    
+                    <div id="exportOnSection" class="hidden">
+                        <label class="block text-sm text-gray-300 mb-2">Export Data On This Date</label>
+                        <input type="date" id="exportOnDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                        <p class="text-xs text-gray-400 mt-1">Exports all data on this specific date only</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Export Format</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="exportFormat" value="csv" checked class="mr-2">
+                                <span>CSV</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="exportFormat" value="json" class="mr-2">
+                                <span>JSON</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button id="exportBtn" class="w-full bg-yellow-500 text-black px-4 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
+                        <i class="fas fa-download mr-2"></i>Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Archive Data Section -->
+            <div class="glassmorphism p-6">
+                <h2 class="text-2xl font-bold mb-4">
+                    <i class="fas fa-archive text-yellow-500 mr-2"></i>Archive Data
+                </h2>
+                <p class="text-gray-400 text-sm mb-4">Move old data to archive tables</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Data Type</label>
+                        <select id="archiveDataType" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            <option value="quiz_results">Quiz Results</option>
+                            <option value="quests">Player Quests</option>
+                            <option value="achievements">Achievements</option>
+                            <option value="lessons">Lessons</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Archive Mode</label>
+                        <select id="archiveMode" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            <option value="before">Archive Data Older Than (Before Date)</option>
+                            <option value="range">Archive Data Between Dates (Date Range)</option>
+                            <option value="on">Archive Data On Specific Date</option>
+                        </select>
+                        <p id="archiveDateRangeMessage" class="text-xs text-gray-400 mt-1"></p>
+                    </div>
+                    
+                    <div id="archiveBeforeSection">
+                        <label class="block text-sm text-gray-300 mb-2">Archive Data Older Than</label>
+                        <input type="date" id="archiveBeforeDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                        <p class="text-xs text-gray-400 mt-1">Archives all data before this date (not including the date itself)</p>
+                    </div>
+                    
+                    <div id="archiveRangeSection" class="hidden">
+                        <label class="block text-sm text-gray-300 mb-2">Date Range</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Start Date</label>
+                                <input type="date" id="archiveStartDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">End Date</label>
+                                <input type="date" id="archiveEndDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Archives all data between these dates (inclusive)</p>
+                    </div>
+                    
+                    <div id="archiveOnSection" class="hidden">
+                        <label class="block text-sm text-gray-300 mb-2">Archive Data On This Date</label>
+                        <input type="date" id="archiveOnDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                        <p class="text-xs text-gray-400 mt-1">Archives all data on this specific date only</p>
+                    </div>
+                    
+                    <div class="bg-yellow-500 bg-opacity-10 border border-yellow-500 border-opacity-30 rounded-lg p-3">
+                        <p class="text-sm text-yellow-300">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            This will move data to archive tables. Data will remain accessible but separated from active records.
+                        </p>
+                    </div>
+                    
+                    <button id="archiveBtn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        <i class="fas fa-archive mr-2"></i>Archive Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Code Generator -->
+        <div class="glassmorphism p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">
+                <i class="fas fa-key text-yellow-500 mr-2"></i>Teacher Code Generator
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Generate access codes for teacher registration</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Generate Codes Section -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Number of Codes</label>
+                        <input 
+                            type="number" 
+                            id="codeCount" 
+                            min="1" 
+                            max="50" 
+                            value="1" 
+                            class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                        >
+                        <p class="text-xs text-gray-400 mt-1">Generate 1-50 codes at once</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Code Prefix</label>
+                        <input 
+                            type="text" 
+                            id="codePrefix" 
+                            value="TEACH" 
+                            maxlength="10"
+                            class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-2">Expiration Date</label>
+                        <input 
+                            type="date" 
+                            id="codeExpiration" 
+                            value="2026-01-01"
+                            class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-[#202221] text-white focus:ring-2 focus:ring-yellow-500 focus:outline-none"
+                        >
+                        <p id="codeExpirationMessage" class="text-xs text-gray-400 mt-1"></p>
+                    </div>
+                    
+                    <button id="generateCodeBtn" class="w-full bg-yellow-500 text-black px-4 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
+                        <i class="fas fa-magic mr-2"></i>Generate Codes
+                    </button>
+                </div>
+                
+                <!-- Generated Codes Display -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm text-gray-300">Generated Codes</label>
+                        <button id="copyAllCodesBtn" class="text-sm text-yellow-500 hover:text-yellow-400 hidden">
+                            <i class="fas fa-copy mr-1"></i>Copy All
+                        </button>
+                    </div>
+                    <div id="generatedCodesList" class="bg-[#171819] border border-[#202221] rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
+                        <p class="text-gray-400 text-sm text-center py-4">No codes generated yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Codes Table -->
+            <div class="mt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold">
+                        <i class="fas fa-list text-yellow-500 mr-2"></i>Recent Teacher Codes
+                    </h3>
+                    <button id="refreshCodesBtn" class="text-sm text-yellow-500 hover:text-yellow-400">
+                        <i class="fas fa-sync-alt mr-1"></i>Refresh
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-left py-2 px-4 text-gray-300">Code</th>
+                                <th class="text-left py-2 px-4 text-gray-300">Status</th>
+                                <th class="text-left py-2 px-4 text-gray-300">Expires</th>
+                                <th class="text-left py-2 px-4 text-gray-300">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codesTableBody">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-gray-400">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="glassmorphism danger-zone p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-red-400">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone
+            </h2>
+            <p class="text-gray-400 text-sm mb-4">Permanently delete archived data. This action cannot be undone!</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-300 mb-2">Data Type</label>
+                    <select id="deleteDataType" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-red-500 text-white focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <option value="quiz_results">Quiz Results (Archived)</option>
+                        <option value="quests">Player Quests (Archived)</option>
+                        <option value="achievements">Achievements (Archived)</option>
+                        <option value="lessons">Lessons (Archived)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-gray-300 mb-2">Delete Data Older Than</label>
+                    <input type="date" id="deleteBeforeDate" class="w-full px-4 py-2 rounded-lg bg-[#171819] border border-red-500 text-white focus:ring-2 focus:ring-red-500 focus:outline-none">
+                </div>
+                
+                <div class="flex items-center space-x-2 mb-4">
+                    <input type="checkbox" id="confirmDelete" class="w-4 h-4">
+                    <label for="confirmDelete" class="text-sm text-red-400">I understand this action is permanent and cannot be undone</label>
+                </div>
+                
+                <button id="deleteBtn" class="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-trash-alt mr-2"></i>Permanently Delete
+                </button>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="glassmorphism p-6">
+            <h2 class="text-2xl font-bold mb-4">
+                <i class="fas fa-history text-yellow-500 mr-2"></i>Recent Archive Activity
+            </h2>
+            <div id="activityLog" class="space-y-2 max-h-64 overflow-y-auto">
+                <p class="text-gray-400 text-center py-4">No activity yet</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden z-50">
+        <div class="glassmorphism p-8 rounded-lg text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p id="loadingText" class="text-white">Processing...</p>
+        </div>
+    </div>
+
+    <script>
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(
+                'https://kckasgowvaguzkdlpdyw.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+            );
+            console.log("Supabase initialized:");
+        } catch (err) {
+            console.error("Supabase initialization failed:", err);
+        }
+
+        // Check admin authentication
+        async function validateAdminSession() {
+            const adminId = localStorage.getItem('adminId');
+            if (!adminId) {
+                window.location.href = 'Admin_Login.html';
+                return false;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('admin')
+                    .select('admin_id, full_name')
+                    .eq('admin_id', adminId)
+                    .single();
+                
+                if (error || !data) {
+                    localStorage.removeItem('adminId');
+                    localStorage.removeItem('adminName');
+                    window.location.href = 'Admin_Login.html';
+                    return false;
+                }
+                
+                document.getElementById('adminName').textContent = data.full_name;
+                return true;
+            } catch (err) {
+                console.error('Admin validation error:', err);
+                localStorage.removeItem('adminId');
+                localStorage.removeItem('adminName');
+                window.location.href = 'Admin_Login.html';
+                return false;
+            }
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                // Total Quiz Results
+                const { count: quizCount } = await supabase
+                    .from('student_quiz_results')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('totalQuizResults').textContent = quizCount || 0;
+
+                // Total Quests
+                const { count: questCount } = await supabase
+                    .from('player_quests')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('totalQuests').textContent = questCount || 0;
+
+                // Total Students
+                const { count: studentCount } = await supabase
+                    .from('student')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('totalStudents').textContent = studentCount || 0;
+
+                // Database size (approximate)
+                const dbSize = ((quizCount || 0) + (questCount || 0) + (studentCount || 0)) * 0.5;
+                document.getElementById('dbSize').textContent = dbSize > 1000 ? `${(dbSize / 1000).toFixed(1)}K` : `${Math.round(dbSize)}`;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Show loading
+        function showLoading(text = 'Processing...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingModal').classList.remove('hidden');
+        }
+
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loadingModal').classList.add('hidden');
+        }
+
+        // Add activity log entry
+        function addActivityLog(message, type = 'info') {
+            const log = document.getElementById('activityLog');
+            if (log.children[0]?.textContent === 'No activity yet') {
+                log.innerHTML = '';
+            }
+            
+            const icon = type === 'success' ? 'fa-check-circle text-green-400' : 
+                       type === 'error' ? 'fa-times-circle text-red-400' : 
+                       'fa-info-circle text-yellow-400';
+            
+            const entry = document.createElement('div');
+            entry.className = 'flex items-center space-x-3 p-2 bg-[#171819] rounded-lg';
+            entry.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span class="text-sm">${new Date().toLocaleString()}: ${message}</span>
+            `;
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        // Export mode toggle
+        document.getElementById('exportMode').addEventListener('change', function() {
+            const mode = this.value;
+            document.getElementById('exportBeforeSection').classList.toggle('hidden', mode !== 'before');
+            document.getElementById('exportRangeSection').classList.toggle('hidden', mode !== 'range');
+            document.getElementById('exportOnSection').classList.toggle('hidden', mode !== 'on');
+        });
+
+        document.getElementById('exportDataType').addEventListener('change', function() {
+            updateDatePickerAvailability('export', this.value);
+        });
+
+        // Helper function to apply date filter to query
+        function applyDateFilter(query, dateField, mode, beforeDate, startDate, endDate, onDate) {
+            if (mode === 'all') {
+                return query; // No filter
+            } else if (mode === 'before') {
+                return query.lt(dateField, beforeDate);
+            } else if (mode === 'range') {
+                const startOfDay = startDate + 'T00:00:00';
+                const endOfDay = endDate + 'T23:59:59.999';
+                return query.gte(dateField, startOfDay).lte(dateField, endOfDay);
+            } else if (mode === 'on') {
+                const startOfDay = onDate + 'T00:00:00';
+                const endOfDay = onDate + 'T23:59:59.999';
+                return query.gte(dateField, startOfDay).lte(dateField, endOfDay);
+            }
+            return query;
+        }
+
+        // Date availability helpers for export/archive filters
+        const dateSupportedDataTypes = {
+            quiz_results: { table: 'student_quiz_results', dateField: 'taken_at' },
+            quests: { table: 'player_quests', dateField: 'created_at' },
+            achievements: { table: 'player_achievements', dateField: 'created_at' },
+            lessons: { table: 'player_lessons', dateField: 'created_at' }
+        };
+        const dateRangeCache = {};
+        const dateInputMap = {
+            export: ['exportBeforeDate', 'exportStartDate', 'exportEndDate', 'exportOnDate'],
+            archive: ['archiveBeforeDate', 'archiveStartDate', 'archiveEndDate', 'archiveOnDate']
+        };
+        const latestRangeRequest = { export: null, archive: null };
+        const dateRangeFormatter = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
+        function dataTypeSupportsDateFilters(dataType) {
+            return dataType === 'all' || Boolean(dateSupportedDataTypes[dataType]);
+        }
+
+        function getRangeMessageElement(section) {
+            if (section === 'export') return document.getElementById('exportDateRangeMessage');
+            if (section === 'archive') return document.getElementById('archiveDateRangeMessage');
+            return null;
+        }
+
+        function normalizeDateOnly(value) {
+            if (!value) return null;
+            if (value instanceof Date) {
+                return value.toISOString().slice(0, 10);
+            }
+            if (typeof value === 'string') {
+                const [datePart] = value.split('T');
+                return datePart;
+            }
+            return null;
+        }
+
+        function getTodayLocalDateString() {
+            const now = new Date();
+            const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0, 10);
+        }
+
+        function getTomorrowLocalDateString() {
+            const now = new Date();
+            now.setDate(now.getDate() + 1);
+            const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0, 10);
+        }
+
+        async function fetchDateRangeForType(dataType) {
+            if (Object.prototype.hasOwnProperty.call(dateRangeCache, dataType)) {
+                return dateRangeCache[dataType];
+            }
+
+            const config = dateSupportedDataTypes[dataType];
+            if (!config) {
+                dateRangeCache[dataType] = null;
+                return null;
+            }
+
+            const { table, dateField } = config;
+
+            try {
+                const { data: minData, error: minError } = await supabase
+                    .from(table)
+                    .select(dateField)
+                    .not(dateField, 'is', null)
+                    .order(dateField, { ascending: true })
+                    .limit(1);
+
+                const { data: maxData, error: maxError } = await supabase
+                    .from(table)
+                    .select(dateField)
+                    .not(dateField, 'is', null)
+                    .order(dateField, { ascending: false })
+                    .limit(1);
+
+                if (minError || maxError) {
+                    console.error(`Failed to fetch date range for ${dataType}:`, minError || maxError);
+                    dateRangeCache[dataType] = null;
+                    return null;
+                }
+
+                if (!minData?.length || !maxData?.length) {
+                    dateRangeCache[dataType] = null;
+                    return null;
+                }
+
+                const min = normalizeDateOnly(minData[0][dateField]);
+                const max = normalizeDateOnly(maxData[0][dateField]);
+                const range = min && max ? { min, max } : null;
+                dateRangeCache[dataType] = range;
+                return range;
+            } catch (error) {
+                console.error(`Error obtaining date range for ${dataType}:`, error);
+                dateRangeCache[dataType] = null;
+                return null;
+            }
+        }
+
+        async function getDateRangeForDataType(dataType) {
+            if (dataType === 'all') {
+                if (Object.prototype.hasOwnProperty.call(dateRangeCache, 'all')) {
+                    return dateRangeCache['all'];
+                }
+
+                const ranges = await Promise.all(
+                    Object.keys(dateSupportedDataTypes).map(type => fetchDateRangeForType(type))
+                );
+
+                const validRanges = ranges.filter(Boolean);
+                if (!validRanges.length) {
+                    dateRangeCache['all'] = null;
+                    return null;
+                }
+
+                const aggregated = validRanges.reduce((acc, range) => ({
+                    min: range.min < acc.min ? range.min : acc.min,
+                    max: range.max > acc.max ? range.max : acc.max
+                }), { ...validRanges[0] });
+
+                dateRangeCache['all'] = aggregated;
+                return aggregated;
+            }
+
+            return fetchDateRangeForType(dataType);
+        }
+
+        function setSectionInputsDisabled(section, disabled, clearValue = false) {
+            const inputIds = dateInputMap[section] || [];
+            inputIds.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.disabled = disabled;
+                if (disabled) {
+                    input.removeAttribute('min');
+                    input.removeAttribute('max');
+                    if (clearValue) {
+                        input.value = '';
+                    }
+                }
+            });
+        }
+
+        function applyRangeToSectionInputs(section, range) {
+            const inputIds = dateInputMap[section] || [];
+            inputIds.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.disabled = false;
+                input.min = range.min;
+                input.max = range.max;
+                if (input.value) {
+                    if (input.value < range.min) {
+                        input.value = range.min;
+                    } else if (input.value > range.max) {
+                        input.value = range.max;
+                    }
+                }
+            });
+        }
+
+        function updateDateRangeMessage(section, status, range) {
+            const element = getRangeMessageElement(section);
+            if (!element) return;
+
+            if (status === 'loading') {
+                element.textContent = 'Checking available dates...';
+            } else if (status === 'no-support') {
+                element.textContent = 'Date filters are unavailable for this data type.';
+            } else if (status === 'no-data') {
+                element.textContent = 'No records found to determine a date range.';
+            } else if (status === 'error') {
+                element.textContent = 'Unable to determine date range. Please try again.';
+            } else if (status === 'ready' && range) {
+                const minLabel = dateRangeFormatter.format(new Date(`${range.min}T00:00:00`));
+                const maxLabel = dateRangeFormatter.format(new Date(`${range.max}T00:00:00`));
+                element.textContent = `Available data window: ${minLabel} to ${maxLabel}`;
+            } else {
+                element.textContent = '';
+            }
+        }
+
+        async function updateDatePickerAvailability(section, dataType) {
+            latestRangeRequest[section] = dataType;
+
+            if (!dataTypeSupportsDateFilters(dataType)) {
+                setSectionInputsDisabled(section, true, true);
+                updateDateRangeMessage(section, 'no-support');
+                return;
+            }
+
+            setSectionInputsDisabled(section, true, false);
+            updateDateRangeMessage(section, 'loading');
+
+            try {
+                const range = await getDateRangeForDataType(dataType);
+
+                if (latestRangeRequest[section] !== dataType) {
+                    return;
+                }
+
+                if (!range) {
+                    setSectionInputsDisabled(section, true, true);
+                    updateDateRangeMessage(section, 'no-data');
+                    return;
+                }
+
+                applyRangeToSectionInputs(section, range);
+                updateDateRangeMessage(section, 'ready', range);
+            } catch (error) {
+                console.error('Failed to update date picker availability:', error);
+                if (latestRangeRequest[section] !== dataType) {
+                    return;
+                }
+                setSectionInputsDisabled(section, true, true);
+                updateDateRangeMessage(section, 'error');
+            }
+        }
+
+        function updateTeacherCodeExpirationConstraints() {
+            const expirationInput = document.getElementById('codeExpiration');
+            const messageElement = document.getElementById('codeExpirationMessage');
+
+            if (!expirationInput || !messageElement) return;
+
+            const tomorrowStr = getTomorrowLocalDateString();
+            expirationInput.disabled = false;
+            expirationInput.min = tomorrowStr;
+            expirationInput.removeAttribute('max');
+
+            if (!expirationInput.value || expirationInput.value < tomorrowStr) {
+                expirationInput.value = tomorrowStr;
+            }
+
+            messageElement.textContent = 'Expiration date must be tomorrow or any future date.';
+        }
+
+        // Export data
+        document.getElementById('exportBtn').addEventListener('click', async function() {
+            const dataType = document.getElementById('exportDataType').value;
+            const mode = document.getElementById('exportMode').value;
+            const format = document.querySelector('input[name="exportFormat"]:checked').value;
+            
+            // Get date values based on mode
+            const beforeDate = document.getElementById('exportBeforeDate').value;
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+            const onDate = document.getElementById('exportOnDate').value;
+            
+            // Validate dates based on mode
+            if (mode === 'before' && !beforeDate) {
+                alert('Please select a date');
+                return;
+            } else if (mode === 'range') {
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates');
+                    return;
+                }
+                if (new Date(startDate) > new Date(endDate)) {
+                    alert('Start date must be before or equal to end date');
+                    return;
+                }
+            } else if (mode === 'on' && !onDate) {
+                alert('Please select a date');
+                return;
+            }
+            
+            showLoading('Exporting data...');
+            
+            try {
+                let data = [];
+                let filename = '';
+                
+                if (dataType === 'quiz_results' || dataType === 'all') {
+                    let query = supabase.from('student_quiz_results').select('*, student:student_id(full_name), quiz:quizzes(title)');
+                    query = applyDateFilter(query, 'taken_at', mode, beforeDate, startDate, endDate, onDate);
+                    const { data: quizData } = await query;
+                    if (dataType === 'all') {
+                        data.push({ type: 'quiz_results', data: quizData || [] });
+                    } else {
+                        data = quizData || [];
+                        filename = 'quiz_results';
+                    }
+                }
+                
+                if (dataType === 'quests' || dataType === 'all') {
+                    let query = supabase.from('player_quests').select('*, characters(character_name, student_id)');
+                    query = applyDateFilter(query, 'created_at', mode, beforeDate, startDate, endDate, onDate);
+                    const { data: questData } = await query;
+                    if (dataType === 'all') {
+                        data.push({ type: 'quests', data: questData || [] });
+                    } else {
+                        data = questData || [];
+                        filename = 'quests';
+                    }
+                }
+                
+                // Students don't have date filters (no date field)
+                if (dataType === 'students' || dataType === 'all') {
+                    const { data: studentData } = await supabase.from('student').select('*');
+                    if (dataType === 'all') {
+                        data.push({ type: 'students', data: studentData || [] });
+                    } else {
+                        data = studentData || [];
+                        filename = 'students';
+                    }
+                }
+                
+                if (dataType === 'achievements' || dataType === 'all') {
+                    let query = supabase.from('player_achievements').select('*');
+                    query = applyDateFilter(query, 'created_at', mode, beforeDate, startDate, endDate, onDate);
+                    const { data: achievementData } = await query;
+                    if (dataType === 'all') {
+                        data.push({ type: 'achievements', data: achievementData || [] });
+                    } else {
+                        data = achievementData || [];
+                        filename = 'achievements';
+                    }
+                }
+                
+                if (dataType === 'lessons' || dataType === 'all') {
+                    let query = supabase.from('player_lessons').select('*');
+                    query = applyDateFilter(query, 'created_at', mode, beforeDate, startDate, endDate, onDate);
+                    const { data: lessonData } = await query;
+                    if (dataType === 'all') {
+                        data.push({ type: 'lessons', data: lessonData || [] });
+                    } else {
+                        data = lessonData || [];
+                        filename = 'lessons';
+                    }
+                }
+                
+                let content, mimeType;
+                if (format === 'csv') {
+                    if (dataType === 'all') {
+                        content = data.map(d => {
+                            const csv = convertToCSV(d.data);
+                            return `=== ${d.type.toUpperCase()} ===\n${csv}\n\n`;
+                        }).join('');
+                    } else {
+                        content = convertToCSV(data);
+                    }
+                    mimeType = 'text/csv';
+                    filename = `${filename || 'all_data'}_${new Date().toISOString().slice(0,10)}.csv`;
+                } else {
+                    content = JSON.stringify(data, null, 2);
+                    mimeType = 'application/json';
+                    filename = `${filename || 'all_data'}_${new Date().toISOString().slice(0,10)}.json`;
+                }
+                
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                let modeDescription = mode === 'all' ? 'all' : 
+                                     mode === 'before' ? `before ${beforeDate}` :
+                                     mode === 'range' ? `between ${startDate} and ${endDate}` :
+                                     `on ${onDate}`;
+                addActivityLog(`Exported ${dataType} data ${modeDescription} (${format.toUpperCase()})`, 'success');
+                hideLoading();
+            } catch (error) {
+                console.error('Export error:', error);
+                addActivityLog(`Export failed: ${error.message}`, 'error');
+                hideLoading();
+                alert('Export failed. Please check console for details.');
+            }
+        });
+
+        // Convert to CSV
+        function convertToCSV(data) {
+            if (!data || data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            const csvRows = [headers.join(',')];
+            
+            for (const row of data) {
+                const values = headers.map(header => {
+                    const value = row[header];
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'object') return JSON.stringify(value);
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+            
+            return csvRows.join('\n');
+        }
+
+        // Archive mode toggle
+        document.getElementById('archiveMode').addEventListener('change', function() {
+            const mode = this.value;
+            document.getElementById('archiveBeforeSection').classList.toggle('hidden', mode !== 'before');
+            document.getElementById('archiveRangeSection').classList.toggle('hidden', mode !== 'range');
+            document.getElementById('archiveOnSection').classList.toggle('hidden', mode !== 'on');
+        });
+
+        document.getElementById('archiveDataType').addEventListener('change', function() {
+            updateDatePickerAvailability('archive', this.value);
+        });
+
+        // Archive data
+        document.getElementById('archiveBtn').addEventListener('click', async function() {
+            const dataType = document.getElementById('archiveDataType').value;
+            const mode = document.getElementById('archiveMode').value;
+            
+            // Validate inputs based on mode
+            let queryDescription = '';
+            let beforeDate, startDate, endDate, onDate;
+            
+            if (mode === 'before') {
+                beforeDate = document.getElementById('archiveBeforeDate').value;
+                if (!beforeDate) {
+                    alert('Please select a date');
+                    return;
+                }
+                queryDescription = `before ${beforeDate}`;
+            } else if (mode === 'range') {
+                startDate = document.getElementById('archiveStartDate').value;
+                endDate = document.getElementById('archiveEndDate').value;
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates');
+                    return;
+                }
+                if (new Date(startDate) > new Date(endDate)) {
+                    alert('Start date must be before or equal to end date');
+                    return;
+                }
+                queryDescription = `between ${startDate} and ${endDate}`;
+            } else if (mode === 'on') {
+                onDate = document.getElementById('archiveOnDate').value;
+                if (!onDate) {
+                    alert('Please select a date');
+                    return;
+                }
+                queryDescription = `on ${onDate}`;
+            }
+            
+            if (!confirm(`Are you sure you want to archive ${dataType} data ${queryDescription}?`)) {
+                return;
+            }
+            
+            showLoading(`Archiving ${dataType}...`);
+            
+            try {
+                // Determine source table and archive table names
+                let sourceTable, archiveTable;
+                
+                if (dataType === 'quiz_results') {
+                    sourceTable = 'student_quiz_results';
+                    archiveTable = 'student_quiz_results_archive';
+                } else if (dataType === 'quests') {
+                    sourceTable = 'player_quests';
+                    archiveTable = 'player_quests_archive';
+                } else if (dataType === 'achievements') {
+                    sourceTable = 'player_achievements';
+                    archiveTable = 'player_achievements_archive';
+                } else if (dataType === 'lessons') {
+                    sourceTable = 'player_lessons';
+                    archiveTable = 'player_lessons_archive';
+                } else {
+                    throw new Error(`Unknown data type: ${dataType}`);
+                }
+                
+                const dateField = dataType === 'quiz_results' ? 'taken_at' : 'created_at';
+                
+                // Build query based on mode with proper date formatting
+                let query = supabase.from(sourceTable).select('*');
+                
+                if (mode === 'before') {
+                    // For 'before', we want records strictly before the date (not including the date itself)
+                    const beforeDateTime = beforeDate + 'T00:00:00.000Z';
+                    query = query.lt(dateField, beforeDateTime);
+                } else if (mode === 'range') {
+                    // Include full day range (start of start date to end of end date)
+                    const startOfDay = startDate + 'T00:00:00.000Z';
+                    const endOfDay = endDate + 'T23:59:59.999Z';
+                    query = query.gte(dateField, startOfDay).lte(dateField, endOfDay);
+                } else if (mode === 'on') {
+                    // Archive data on this specific date (start of day to end of day)
+                    const startOfDay = onDate + 'T00:00:00.000Z';
+                    const endOfDay = onDate + 'T23:59:59.999Z';
+                    query = query.gte(dateField, startOfDay).lte(dateField, endOfDay);
+                }
+                
+                // Fetch data to archive
+                const { data: dataToArchive, error: fetchError } = await query;
+                
+                if (fetchError) {
+                    console.error('Error fetching data to archive:', fetchError);
+                    throw new Error(`Failed to fetch data: ${fetchError.message}`);
+                }
+                
+                if (!dataToArchive || dataToArchive.length === 0) {
+                    alert(`No data found to archive for ${dataType} ${queryDescription}`);
+                    hideLoading();
+                    return;
+                }
+                
+                console.log(`Found ${dataToArchive.length} records to archive. Archive table: ${archiveTable}`);
+                
+                // Insert into archive table
+                const { data: insertedData, error: insertError } = await supabase
+                    .from(archiveTable)
+                    .insert(dataToArchive)
+                    .select();
+                
+                if (insertError) {
+                    console.error('Error inserting into archive table:', insertError);
+                    console.error('Archive table name:', archiveTable);
+                    console.error('Sample data:', dataToArchive[0]);
+                    throw new Error(`Failed to insert into archive table "${archiveTable}": ${insertError.message}. Make sure the archive table exists and has the same structure as the source table.`);
+                }
+                
+                console.log(`Successfully inserted ${insertedData?.length || dataToArchive.length} records into ${archiveTable}`);
+                
+                // Delete from source table using the same query logic
+                let deleteQuery = supabase.from(sourceTable).delete();
+                let deleteWarningMessage = '';
+                
+                if (mode === 'before') {
+                    const beforeDateTime = beforeDate + 'T00:00:00.000Z';
+                    deleteQuery = deleteQuery.lt(dateField, beforeDateTime);
+                } else if (mode === 'range') {
+                    const startOfDay = startDate + 'T00:00:00.000Z';
+                    const endOfDay = endDate + 'T23:59:59.999Z';
+                    deleteQuery = deleteQuery.gte(dateField, startOfDay).lte(dateField, endOfDay);
+                } else if (mode === 'on') {
+                    const startOfDay = onDate + 'T00:00:00.000Z';
+                    const endOfDay = onDate + 'T23:59:59.999Z';
+                    deleteQuery = deleteQuery.gte(dateField, startOfDay).lte(dateField, endOfDay);
+                }
+                
+                const { error: deleteError } = await deleteQuery;
+                
+                if (deleteError) {
+                    console.error('Error deleting from source table:', deleteError);
+                    // Don't throw here - data is already archived, just log the error
+                    addActivityLog(`Warning: Data archived but deletion from source failed: ${deleteError.message}`, 'error');
+                    deleteWarningMessage = deleteError.message;
+                } else {
+                    console.log(`Successfully deleted ${dataToArchive.length} records from ${sourceTable}`);
+                }
+                
+                addActivityLog(`Archived ${dataToArchive.length} ${dataType} records ${queryDescription}`, 'success');
+                loadStatistics();
+                hideLoading();
+                
+                const confirmationMessage = deleteWarningMessage
+                    ? `Archived ${dataToArchive.length} ${dataType} records ${queryDescription}, but deleting the original records failed: ${deleteWarningMessage}`
+                    : `Successfully archived ${dataToArchive.length} ${dataType} records ${queryDescription}.`;
+                alert(confirmationMessage);
+            } catch (error) {
+                console.error('Archive error:', error);
+                addActivityLog(`Archive failed: ${error.message}`, 'error');
+                hideLoading();
+                alert(`Archive failed: ${error.message}\n\nCheck the browser console for more details.`);
+            }
+        });
+
+        // Delete confirmation checkbox
+        document.getElementById('confirmDelete').addEventListener('change', function() {
+            document.getElementById('deleteBtn').disabled = !this.checked;
+        });
+
+        // Delete archived data
+        document.getElementById('deleteBtn').addEventListener('click', async function() {
+            const dataType = document.getElementById('deleteDataType').value;
+            const beforeDate = document.getElementById('deleteBeforeDate').value;
+            
+            if (!beforeDate) {
+                alert('Please select a date');
+                return;
+            }
+            
+            if (!confirm(`⚠️ WARNING: This will PERMANENTLY DELETE archived ${dataType} data before ${beforeDate}. This cannot be undone!`)) {
+                return;
+            }
+            
+            if (!confirm(`Are you absolutely sure? This action is IRREVERSIBLE!`)) {
+                return;
+            }
+            
+            showLoading(`Deleting archived ${dataType}...`);
+            
+            try {
+                const archiveTable = `${dataType}_archive`;
+                const dateField = dataType === 'quiz_results' ? 'taken_at' : 'created_at';
+                
+                const { error } = await supabase
+                    .from(archiveTable)
+                    .delete()
+                    .lt(dateField, beforeDate);
+                
+                if (error) throw error;
+                
+                addActivityLog(`Permanently deleted archived ${dataType} data before ${beforeDate}`, 'success');
+                hideLoading();
+            } catch (error) {
+                console.error('Delete error:', error);
+                addActivityLog(`Delete failed: ${error.message}`, 'error');
+                hideLoading();
+                alert('Delete failed. Please check console for details.');
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('adminId');
+            localStorage.removeItem('adminName');
+            window.location.href = 'index.html';
+        });
+
+        // Teacher Code Generator Functions
+        let generatedCodes = [];
+
+        // Generate a single teacher code
+        async function generateCode(prefix = 'TEACH', length = 6, expirationDate = '2026-01-01T00:00:00Z') {
+            const randomPart = Math.random().toString(36).substr(2, length).toUpperCase();
+            const code = `${prefix}-${randomPart}-${new Date().getFullYear()}`;
+
+            try {
+                const { data, error } = await supabase
+                    .from('teacher_codes')
+                    .insert([{ 
+                        code, 
+                        is_used: false, 
+                        expires_at: expirationDate 
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                return { code, data: data[0], success: true };
+            } catch (error) {
+                console.error('Error generating code:', error.message);
+                return { code, success: false, error: error.message };
+            }
+        }
+
+        // Generate multiple codes
+        async function generateMultipleCodes(count, prefix, expirationDate) {
+            const codes = [];
+            showLoading(`Generating ${count} code(s)...`);
+            
+            for (let i = 0; i < count; i++) {
+                const result = await generateCode(prefix, 6, expirationDate);
+                codes.push(result);
+                // Small delay to avoid overwhelming the database
+                if (i < count - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            hideLoading();
+            return codes;
+        }
+
+        // Display generated codes
+        function displayGeneratedCodes(codes) {
+            const codesList = document.getElementById('generatedCodesList');
+            const copyAllBtn = document.getElementById('copyAllCodesBtn');
+            
+            if (codes.length === 0) {
+                codesList.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No codes generated yet</p>';
+                copyAllBtn.classList.add('hidden');
+                return;
+            }
+
+            codesList.innerHTML = '';
+            const successfulCodes = codes.filter(c => c.success);
+            const failedCodes = codes.filter(c => !c.success);
+
+            successfulCodes.forEach((item, index) => {
+                const codeDiv = document.createElement('div');
+                codeDiv.className = 'flex items-center justify-between p-2 bg-[#0a0a0a] rounded border border-gray-700';
+                
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'flex items-center space-x-3 flex-1';
+                
+                const codeSpan = document.createElement('span');
+                codeSpan.className = 'font-mono text-yellow-400 text-sm';
+                codeSpan.textContent = item.code;
+                
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'text-xs text-green-400';
+                statusSpan.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Created';
+                
+                leftDiv.appendChild(codeSpan);
+                leftDiv.appendChild(statusSpan);
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'text-yellow-500 hover:text-yellow-400 text-sm ml-2 copy-code-btn';
+                copyBtn.setAttribute('data-code', item.code);
+                copyBtn.setAttribute('title', 'Copy code');
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                
+                codeDiv.appendChild(leftDiv);
+                codeDiv.appendChild(copyBtn);
+                codesList.appendChild(codeDiv);
+            });
+
+            if (failedCodes.length > 0) {
+                failedCodes.forEach(item => {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'flex items-center justify-between p-2 bg-red-900 bg-opacity-20 rounded border border-red-500';
+                    errorDiv.innerHTML = `
+                        <div class="flex items-center space-x-3 flex-1">
+                            <span class="font-mono text-red-400 text-sm">${item.code}</span>
+                            <span class="text-xs text-red-400">
+                                <i class="fas fa-times-circle mr-1"></i>Failed: ${item.error}
+                            </span>
+                        </div>
+                    `;
+                    codesList.appendChild(errorDiv);
+                });
+            }
+
+            if (successfulCodes.length > 0) {
+                copyAllBtn.classList.remove('hidden');
+                generatedCodes = successfulCodes.map(c => c.code);
+            } else {
+                copyAllBtn.classList.add('hidden');
+            }
+
+            // Refresh the codes table
+            loadRecentCodes();
+        }
+
+        // Copy single code to clipboard (using event delegation)
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.copy-code-btn')) {
+                const btn = e.target.closest('.copy-code-btn');
+                const code = btn.getAttribute('data-code');
+                
+                navigator.clipboard.writeText(code).then(() => {
+                    // Show feedback
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check text-green-400"></i>';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy. Please select and copy manually.');
+                });
+            }
+        });
+
+        // Copy all codes to clipboard
+        document.getElementById('copyAllCodesBtn').addEventListener('click', function() {
+            if (generatedCodes.length === 0) return;
+            
+            const codesText = generatedCodes.join('\n');
+            navigator.clipboard.writeText(codesText).then(() => {
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+                this.classList.add('text-green-400');
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('text-green-400');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy. Please select and copy manually.');
+            });
+        });
+
+        // Load recent codes from database
+        async function loadRecentCodes() {
+            try {
+                const { data, error } = await supabase
+                    .from('teacher_codes')
+                    .select('code, is_used, expires_at, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+
+                const tbody = document.getElementById('codesTableBody');
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-400">No codes found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-800 hover:bg-gray-900';
+                    
+                    const statusBadge = item.is_used 
+                        ? '<span class="px-2 py-1 bg-red-500 bg-opacity-20 text-red-400 rounded text-xs">Used</span>'
+                        : new Date(item.expires_at) < new Date()
+                        ? '<span class="px-2 py-1 bg-gray-500 bg-opacity-20 text-gray-400 rounded text-xs">Expired</span>'
+                        : '<span class="px-2 py-1 bg-green-500 bg-opacity-20 text-green-400 rounded text-xs">Active</span>';
+                    
+                    const expiresDate = item.expires_at 
+                        ? new Date(item.expires_at).toLocaleDateString() 
+                        : 'N/A';
+                    const createdDate = item.created_at 
+                        ? new Date(item.created_at).toLocaleDateString() 
+                        : 'N/A';
+                    
+                    row.innerHTML = `
+                        <td class="py-2 px-4 font-mono text-yellow-400">${item.code}</td>
+                        <td class="py-2 px-4">${statusBadge}</td>
+                        <td class="py-2 px-4 text-gray-300">${expiresDate}</td>
+                        <td class="py-2 px-4 text-gray-300">${createdDate}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading codes:', error);
+                const tbody = document.getElementById('codesTableBody');
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-400">Error loading codes</td></tr>';
+            }
+        }
+
+        // Generate codes button handler
+        document.getElementById('generateCodeBtn').addEventListener('click', async function() {
+            const count = parseInt(document.getElementById('codeCount').value) || 1;
+            const prefix = document.getElementById('codePrefix').value.trim().toUpperCase() || 'TEACH';
+            const expirationDateInput = document.getElementById('codeExpiration').value;
+            
+            if (count < 1 || count > 50) {
+                alert('Please enter a number between 1 and 50');
+                return;
+            }
+
+            if (!prefix) {
+                alert('Please enter a code prefix');
+                return;
+            }
+
+            if (!expirationDateInput) {
+                alert('Please select an expiration date');
+                return;
+            }
+
+            const tomorrowStr = getTomorrowLocalDateString();
+            if (expirationDateInput < tomorrowStr) {
+                alert('Expiration date must be at least tomorrow.');
+                updateTeacherCodeExpirationConstraints();
+                return;
+            }
+
+            // Convert date to ISO string with time
+            const expirationDate = expirationDateInput + 'T00:00:00Z';
+
+            const codes = await generateMultipleCodes(count, prefix, expirationDate);
+            displayGeneratedCodes(codes);
+            
+            const successCount = codes.filter(c => c.success).length;
+            if (successCount > 0) {
+                addActivityLog(`Generated ${successCount} teacher code(s)`, 'success');
+            }
+        });
+
+        // Refresh codes button handler
+        document.getElementById('refreshCodesBtn').addEventListener('click', function() {
+            loadRecentCodes();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            const isValid = await validateAdminSession();
+            if (isValid) {
+                const exportType = document.getElementById('exportDataType').value;
+                const archiveType = document.getElementById('archiveDataType').value;
+                await Promise.all([
+                    loadStatistics(),
+                    loadRecentCodes(),
+                    updateDatePickerAvailability('export', exportType),
+                    updateDatePickerAvailability('archive', archiveType)
+                ]);
+                updateTeacherCodeExpirationConstraints();
+            }
+        });
+    </script>
+</body>
+</html>
+

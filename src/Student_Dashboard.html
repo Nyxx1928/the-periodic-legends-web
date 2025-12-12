@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Dashboard | The Periodic Legends</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="/config.local.js"></script>
+  <style>
+    /* Chart Container Styling */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1; /* Square aspect ratio for radar chart */
+      max-height: 350px; /* Increased max-height for larger chart */
+      min-height: 200px; /* Increased min-height for better visibility */
+      padding: 10px; /* Minimal padding to center the chart */
+    }
+    /* Ensure canvas fills the container */
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .chart-container {
+        aspect-ratio: 1 / 1; /* Maintain square aspect ratio */
+        max-height: 280px; /* Slightly smaller for mobile */
+        min-height: 160px;
+      }
+    }
+    /* Leaderboard Specific Styling */
+    .leaderboard-card {
+        background: rgba(60, 60, 60, 0.85); /* Lightened from rgba(30, 32, 34, 0.9) */
+        border-radius: 12px;
+        padding: 1.5rem; /* Increased padding for better spacing */
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for noticeability */
+    }
+    .leaderboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(250, 204, 21, 0.25);
+        border-color: #facc15;
+    }
+    .leaderboard-header {
+        cursor: pointer;
+    }
+    .leaderboard-card .rank {
+        font-weight: 700;
+        font-size: 1.5rem; /* Slightly larger font for noticeability */
+        width: 3rem; /* Larger badge */
+        height: 3rem;
+        text-align: center;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.25rem; /* Adjusted spacing */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+    }
+    /* Rank-specific badge colors */
+    .leaderboard-card.rank-1 .rank {
+        background: #facc15; /* Gold for 1st */
+        color: #000;
+    }
+    .leaderboard-card.rank-2 .rank {
+        background: #d1d5db; /* Silver for 2nd */
+        color: #000;
+    }
+    .leaderboard-card.rank-3 .rank {
+        background: #cd7f32; /* Bronze for 3rd */
+        color: #000;
+    }
+    .leaderboard-card.rank-4 .rank,
+    .leaderboard-card.rank-5 .rank {
+        background: rgba(250, 204, 21, 0.15);
+        color: #facc15;
+    }
+    .leaderboard-card .score-highlight {
+        color: #facc15;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .leaderboard-card .player-info {
+        flex: 1;
+        color: #fff;
+        font-size: 1.1rem; /* Slightly larger for readability */
+        font-weight: 500; /* Bolder for noticeability */
+    }
+    .leaderboard-card .toggle-details {
+        color: #facc15;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    .leaderboard-card .toggle-details:hover {
+        transform: scale(1.2);
+    }
+    .leaderboard-card .score-details {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        background: rgba(40, 40, 40, 0.9); /* Lightened from rgba(20, 22, 24, 0.95) */
+        padding: 0 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+    }
+    .leaderboard-card .score-details.active {
+        max-height: 200px;
+        padding: 1rem;
+    }
+    .leaderboard-card img {
+        width: 5rem; /* Increased for desktop */
+        height: 5rem;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid transparent;
+        transition: border-color 0.2s ease;
+    }
+    .leaderboard-card:hover img {
+        border-color: #facc15;
+    }
+    /* Responsive Adjustments */
+    @media (max-width: 640px) {
+    /* Leaderboard Section Container */
+    .glassmorphism.p-6 {
+        padding: 1rem !important;
+    }
+    .glassmorphism-dark.p-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Leaderboard Cards */
+    .leaderboard-card {
+        padding: 1rem 0.75rem; /* Reduced padding for mobile */
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Rank Badge - Smaller on mobile */
+    .leaderboard-card .rank {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1rem;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+    
+    /* Avatar - Smaller on mobile */
+    .leaderboard-card img {
+        width: 2.75rem;
+        height: 2.75rem;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+    
+    /* Header Layout - Better mobile arrangement */
+    .leaderboard-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+    
+    /* Player Info - Better text sizing and layout */
+    .leaderboard-card .player-info {
+        flex: 1;
+        min-width: 0; /* Allow shrinking */
+        font-size: 0.9rem;
+        overflow: hidden;
+    }
+    
+    .leaderboard-card .player-info .font-medium {
+        font-size: 0.95rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.25rem;
+    }
+    
+    .leaderboard-card .score-highlight {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    
+    /* Toggle Button - Better sizing */
+    .leaderboard-card .toggle-details {
+        margin-left: auto;
+        flex-shrink: 0;
+        padding: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Score Details - Stack vertically on mobile */
+    .leaderboard-card .score-details {
+        padding: 0 0.75rem;
+    }
+    
+    .leaderboard-card .score-details.active {
+        max-height: 400px;
+        padding: 0.75rem;
+    }
+    
+    .leaderboard-card .score-details .grid {
+        grid-template-columns: 1fr !important; /* Single column on mobile */
+        gap: 0.75rem !important;
+    }
+    
+    .leaderboard-card .score-details p {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+    
+    /* Leaderboard List Spacing */
+    #leaderboardList {
+        gap: 0.75rem;
+    }
+    
+    #leaderboardList.space-y-6 > * + * {
+        margin-top: 0.75rem;
+    }
+    
+    /* Filter Section - Better mobile layout */
+    .flex.flex-wrap.gap-4 {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem !important;
+    }
+    
+    .flex-1.min-w-\[150px\] {
+        width: 100%;
+        min-width: unset !important;
+    }
+    
+    /* Leaderboard Title */
+    .text-2xl.font-bold {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Main container padding adjustment */
+    main.px-8 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+    /* Existing styles unchanged */
+    .glassmorphism-dark {
+      background: rgba(30, 32, 34, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(60, 60, 60, 0.18);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+      transition: all 0.3s ease-in-out;
+    }
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+      transition: all 0.3s ease-in-out;
+    }
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #f59e0b, #fcd34d);
+      transition: width 0.5s ease-out;
+    }
+    .score-details {
+      transition: all 0.3s ease;
+      max-height: 0;
+      overflow: hidden;
+    }
+    .score-details.active {
+      max-height: 500px;
+      padding: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .quest-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .quest-card:hover {
+      box-shadow: 0 8px 24px rgba(250, 204, 21, 0.15);
+      transform: translateY(-2px) scale(1.01);
+      border-color: #facc15;
+    }
+    .quest-icon {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.15) 60%,
+        #facc15 100%
+      );
+      border-radius: 0.75rem;
+      width: 3.5rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1.25rem;
+    }
+    .quest-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+    .quest-meta {
+      font-size: 0.95rem;
+      color: #d1d5db;
+      margin-bottom: 0.15rem;
+    }
+    .quest-status {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 0.15rem;
+    }
+    .quest-date {
+      font-size: 0.85rem;
+      color: #a3a3a3;
+    }
+    /* Leaderboard Table Styling */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .leaderboard-table th,
+    .leaderboard-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .leaderboard-table th {
+      font-weight: 600;
+      color: #d1d5db;
+      font-size: 0.9rem;
+    }
+    .leaderboard-table td {
+      color: #fff;
+      font-size: 0.85rem;
+    }
+    .leaderboard-table tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: scale(1.01);
+      transition: all 0.2s ease;
+    }
+    .leaderboard-table .rank {
+      font-weight: bold;
+      color: #facc15;
+      width: 8%;
+    }
+    .leaderboard-table.streamlined .name {
+      width: 25%;
+    }
+    .leaderboard-table.streamlined .grade,
+    .leaderboard-table.streamlined .section,
+    .leaderboard-table.streamlined .quizzes-taken {
+      width: 15%;
+    }
+    .leaderboard-table.streamlined .total-questions {
+      width: 15%;
+    }
+    .leaderboard-table.streamlined .total-score,
+    .leaderboard-table.streamlined .accuracy,
+    .leaderboard-table.streamlined .best-time,
+    .leaderboard-table.streamlined .total-time,
+    .leaderboard-table.streamlined .average-time,
+    .leaderboard-table.streamlined .ranking-score {
+      width: 15%;
+    }
+    /* Specific adjustments for overall view (no total-questions column) */
+    .leaderboard-table.streamlined.overall .name {
+      width: 30%;
+    }
+    .leaderboard-table.streamlined.overall .grade,
+    .leaderboard-table.streamlined.overall .section,
+    .leaderboard-table.streamlined.overall .quizzes-taken,
+    .leaderboard-table.streamlined.overall .ranking-score {
+      width: 17.5%;
+    }
+    @media (max-width: 640px) {
+      .leaderboard-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .leaderboard-table th,
+      .leaderboard-table td {
+        min-width: 100px;
+      }
+      .leaderboard-table.streamlined th,
+      .leaderboard-table.streamlined td {
+        min-width: 80px;
+      }
+      #studentQuestsContainer {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+      }
+    }
+    @media (max-width: 640px) {
+      select {
+        max-width: 100% !important;
+        width: 100% !important;
+        min-width: unset !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+      .glassmorphism select,
+      #quizFilter,
+      #dateFilter,
+      #leaderboardFilter,
+      #sectionFilter {
+        max-width: calc(100vw - 4rem) !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .flex.flex-wrap.gap-4 {
+        overflow-x: hidden !important;
+        padding-right: 1rem;
+      }
+      .flex.flex-wrap > div {
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 1rem;
+      }
+      #leaderboardFilter,
+      #sectionFilter {
+        width: 100% !important;
+        max-width: none !important;
+      }
+    }
+    @media (max-width: 480px) {
+      select option {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .flex.items-end > button {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 0.5rem 1rem;
+      }
+      /* Leaderboard cards for extra small screens */
+      .leaderboard-card {
+        padding: 0.875rem 0.625rem;
+      }
+      .leaderboard-card .rank {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.9rem;
+        margin-right: 0.375rem;
+      }
+      .leaderboard-card img {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-right: 0.375rem;
+      }
+      .leaderboard-card .player-info {
+        font-size: 0.85rem;
+      }
+      .leaderboard-card .player-info .font-medium {
+        font-size: 0.9rem;
+      }
+      .leaderboard-card .score-highlight {
+        font-size: 0.875rem;
+      }
+      .leaderboard-card .score-details.active {
+        max-height: 450px;
+        padding: 0.625rem;
+      }
+      .leaderboard-card .score-details p {
+        font-size: 0.8rem;
+        margin-bottom: 0.375rem;
+      }
+      /* Main container padding for very small screens */
+      main.px-8 {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+      }
+    }
+    select {
+      box-sizing: border-box;
+    }
+    select:focus {
+      outline: none;
+    }
+    /* Mobile Responsive Improvements */
+    @media (max-width: 768px) {
+      /* Main content spacing */
+      main.px-8 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        margin-top: 6rem !important;
+      }
+      
+      /* Main heading */
+      h1.text-5xl {
+        font-size: 2rem !important;
+        line-height: 1.2;
+        margin-bottom: 0.75rem !important;
+      }
+      
+      /* Greeting text */
+      p#studentGreeting {
+        font-size: 1.125rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      
+      /* Section headings */
+      h2.text-xl,
+      h2.text-2xl {
+        font-size: 1.25rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Performance Overview Cards */
+      .glassmorphism.p-6 {
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      
+      .glassmorphism-dark.p-4 {
+        padding: 1rem !important;
+      }
+      
+      .glassmorphism-dark.p-4 h3 {
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      .glassmorphism-dark.p-4 p.text-3xl {
+        font-size: 1.75rem !important;
+      }
+      
+      /* Analytics Section */
+      .glassmorphism-dark.p-3 {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      .glassmorphism-dark.p-3 h3 {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.75rem !important;
+      }
+      
+      /* Chart containers - better mobile sizing */
+      .chart-container {
+        max-height: 250px !important;
+        min-height: 200px !important;
+        padding: 0.5rem !important;
+      }
+      
+      /* Leaderboard Section */
+      .glassmorphism.p-6.rounded-lg.mb-8 {
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      
+      .glassmorphism-dark.p-6.rounded-lg {
+        padding: 1rem !important;
+      }
+      
+      /* Filter Results Section */
+      .glassmorphism.p-4.rounded.mb-6 {
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      
+      .glassmorphism.p-4.rounded.mb-6 h2 {
+        font-size: 1.125rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Filter buttons - stack on mobile */
+      .flex.flex-wrap.gap-4 > div.flex.items-end {
+        margin-top: 0.5rem;
+      }
+      
+      .flex.flex-wrap.gap-4 > div.flex.items-end button {
+        padding: 0.75rem !important;
+        font-size: 0.95rem !important;
+      }
+      
+      /* Quiz Results Section */
+      .glassmorphism.p-4.rounded {
+        padding: 1rem !important;
+      }
+      
+      .glassmorphism.p-4.rounded h2 {
+        font-size: 1.125rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Score items - better mobile layout */
+      .score-item {
+        margin-bottom: 1rem;
+      }
+      
+      .score-item .p-4 {
+        padding: 1rem !important;
+      }
+      
+      .score-item h3.font-medium.text-lg {
+        font-size: 1rem !important;
+        line-height: 1.4;
+        margin-bottom: 0.25rem;
+      }
+      
+      .score-item .text-gray-400.text-sm {
+        font-size: 0.8rem !important;
+      }
+      
+      .score-item .text-xl {
+        font-size: 1.25rem !important;
+      }
+      
+      .score-item .text-sm {
+        font-size: 0.8rem !important;
+      }
+      
+      /* Score details - better mobile layout */
+      .score-details.active {
+        padding: 0.75rem !important;
+      }
+      
+      .score-details.active .grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
+      
+      .score-details.active h4 {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      .score-details.active p {
+        font-size: 0.85rem !important;
+        line-height: 1.5;
+        margin-bottom: 0.25rem;
+      }
+      
+      /* Pagination - better mobile layout */
+      .flex.justify-between.items-center.mt-6 {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch !important;
+      }
+      
+      .flex.justify-between.items-center.mt-6 > div.text-sm {
+        text-align: center;
+        font-size: 0.85rem !important;
+      }
+      
+      .flex.space-x-2 {
+        width: 100%;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      
+      .flex.space-x-2 button {
+        flex: 1;
+        max-width: 150px;
+        padding: 0.75rem !important;
+        font-size: 0.9rem !important;
+      }
+      
+      /* Quests Section */
+      div.text-left.mt-14.mb-10.text-5xl {
+        font-size: 2rem !important;
+        margin-top: 2rem !important;
+        margin-bottom: 1.5rem !important;
+        text-align: left !important;
+      }
+      
+      /* Quest cards - better mobile sizing */
+      .quest-card {
+        min-width: 280px !important;
+        padding: 1rem !important;
+      }
+      
+      .quest-icon {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+        margin-right: 0.75rem !important;
+      }
+      
+      .quest-icon i {
+        font-size: 1.25rem !important;
+      }
+      
+      .quest-title {
+        font-size: 1rem !important;
+        margin-bottom: 0.25rem !important;
+      }
+      
+      .quest-meta,
+      .quest-status,
+      .quest-date {
+        font-size: 0.85rem !important;
+        margin-bottom: 0.25rem !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      /* Extra small screens */
+      main.px-8 {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        margin-top: 5.5rem !important;
+      }
+      
+      h1.text-5xl {
+        font-size: 1.75rem !important;
+      }
+      
+      p#studentGreeting {
+        font-size: 1rem !important;
+      }
+      
+      .glassmorphism-dark.p-4 p.text-3xl {
+        font-size: 1.5rem !important;
+      }
+      
+      .chart-container {
+        max-height: 220px !important;
+        min-height: 180px !important;
+      }
+      
+      .quest-card {
+        min-width: 260px !important;
+        padding: 0.875rem !important;
+      }
+      
+      /* Better touch targets */
+      button,
+      select,
+      .toggle-details {
+        min-height: 44px;
+      }
+    }
+  </style>
+  </head>
+  <body
+    class="bg-black text-white"
+    style="font-family: 'Inter', sans-serif"
+    data-aos-easing="ease-out-cubic"
+    data-aos-duration="1000"
+  >
+    <!-- Header -->
+    <header
+      id="navbar"
+      class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50"
+      data-aos="fade-down"
+    >
+      <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="Student_Dashboard.html" class="flex items-center">
+          <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10" />
+          <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+          <a href="Student_Dashboard.html" class="text-yellow-300">Dashboard</a>
+          <a href="Student_Quest.html" class="hover:text-yellow-300">Quests</a>
+          <a href="Student_Quizzes.html" class="hover:text-yellow-300">Quizzes</a>
+          <a href="Student_Tracking.html" class="hover:text-yellow-300">Progress</a>
+        </nav>
+      </div>
+      <div class="relative hidden md:flex space-x-4">
+        <button id="sign-out-btn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">
+          Sign Out
+        </button>
+      </div>
+      <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+      </button>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+      <button id="menu-close" class="text-white text-2 self-end">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-4">
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition" href="Student_Dashboard.html">Dashboard</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Quest.html">Quests</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Quizzes.html">Quizzes</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Tracking.html">Progress</a>
+      </nav>
+      <div class="flex justify-center">
+        <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign Out</button>
+      </div>
+    </div>
+    <!-- Sign Out Modal -->
+    <div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+      <div class="glassmorphism text-white p-8 rounded-lg w-80 shadow-lg relative">
+        <button id="closeSignOutModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">
+          &times;
+        </button>
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6">
+          Are you sure you want to sign out?
+        </p>
+        <div class="flex justify-between">
+          <button id="confirmSignOut" class="w-full bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black mr-2">
+            Yes
+          </button>
+          <button id="cancelSignOut" class="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 ml-2">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+    <main class="px-8 md:px-48 mt-28">
+      <h1 class="text-5xl font-bold mb-4" data-aos="fade-right">
+        Student
+        <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">Dashboard</span>
+      </h1>
+      <p id="studentGreeting" class="text-2xl mb-8 text-gray-300" data-aos="fade-right" data-aos-delay="100">
+        Welcome back!
+      </p>
+      <!-- Performance Summary -->
+      <div class="glassmorphism p-6 rounded-lg mb-8" data-aos="fade-up">
+        <h2 class="text-xl font-semibold mb-4">Performance Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Total Quizzes Taken</h3>
+            <p id="totalQuizzes" class="text-3xl font-bold text-yellow-400">
+              0
+            </p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Average Score</h3>
+            <p id="averageScore" class="text-3xl font-bold text-yellow-400">
+              0%
+            </p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Highest Score</h3>
+            <p id="highestScore" class="text-3xl font-bold text-yellow-400">
+              0%
+            </p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Current Rank</h3>
+            <p id="currentRank" class="text-3xl font-bold text-yellow-400">-</p>
+          </div>
+        </div>
+      </div>
+      <!-- Analytics Section -->
+      <div class="glassmorphism p-6 rounded-lg mb-8" data-aos="fade-up">
+        <h2 class="text-xl font-semibold mb-4">Performance Analytics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glassmorphism-dark p-3 rounded-lg">
+            <h3 class="text-gray-200 mb-2">Score Trend Over Time</h3>
+            <div class="chart-container">
+              <div class="mt-2 text-center text-xs text-gray-400">
+                <i class="fas fa-arrow-left mr-1"></i> Oldest <span class="mx-2">→</span> Latest <i class="fas fa-arrow-right ml-1"></i>
+              </div>
+              <canvas id="scoreTrendChart"></canvas>
+            </div>
+          </div>
+          <div class="glassmorphism-dark p-3 rounded-lg">
+            <h3 class="text-gray-200 mb-2">Your Skill Readiness Radar</h3>
+            <div class="chart-container">
+              <div class="mt-3 text-center">
+                <p id="topQuizBadge" class="text-sm text-yellow-300">
+                  <i class="fas fa-star mr-1"></i> Loading...
+                </p>
+              </div>
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Leaderboard Section -->
+      <div class="glassmorphism p-6 rounded-lg mb-8 shadow-lg" data-aos="fade-up" data-aos-delay="200">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <i class="fas fa-trophy text-yellow-400 mr-2"></i> Class Leaderboard
+        </h2>
+        <div class="glassmorphism-dark p-6 rounded-lg">
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-4 mb-6 items-center">
+            <div class="flex-1 min-w-[150px]">
+              <label for="leaderboardFilter" class="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
+              <select id="leaderboardFilter" class="glassmorphism-dark border border-gray-600 text-white rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-yellow-400 focus:outline-none transition duration-200" aria-label="Sort leaderboard by metric">
+                <option value="ranking_score">Ranking Score</option>
+                <option value="accuracy">Accuracy</option>
+                <option value="best_time">Best Time</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label for="sectionFilter" class="block text-sm font-medium text-gray-300 mb-2">Section</label>
+              <select id="sectionFilter" class="glassmorphism-dark border border-gray-600 text-white rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-yellow-400 focus:outline-none transition duration-200" aria-label="Filter leaderboard by section">
+                <option value="">All Sections</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label for="gradeFilter" class="block text-sm font-medium text-gray-300 mb-2">Grade Level</label>
+              <select id="gradeFilter" class="glassmorphism-dark border border-gray-600 text-white rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-yellow-400 focus:outline-none transition duration-200" aria-label="Filter leaderboard by grade level">
+                <option value="">All Grades</option>
+              </select>
+            </div>
+          </div>
+          <!-- Leaderboard Content -->
+          <div id="leaderboardList" class="space-y-6">
+            <!-- All ranks (1-5) populated dynamically -->
+          </div>
+        </div>
+      </div>
+      <!-- Filters -->
+      <div class="glassmorphism p-4 rounded mb-6" data-aos="fade-up">
+        <h2 class="text-xl mb-4">Filter Results</h2>
+        <div class="flex flex-wrap gap-4">
+          <div class="flex-1 min-w-[150px]">
+            <label for="quizFilter" class="block text-sm font-medium text-gray-300 mb-1">Quiz</label>
+            <select id="quizFilter" class="glassmorphism-dark border border-transparent text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+              <option value="">All Quizzes</option>
+            </select>
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <label for="dateFilter" class="block text-sm font-medium text-gray-300 mb-1">Time Period</label>
+            <select id="dateFilter" class="glassmorphism-dark border border-transparent text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+              <option value="">All Time</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+              <option value="year">Last Year</option>
+            </select>
+          </div>
+          <div class="flex items-end w-full md:w-auto">
+            <button id="applyFilters" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition w-full md:w-auto">
+              Apply Filters
+            </button>
+          </div>
+          <div class="flex items-end w-full md:w-auto">
+            <button id="resetFilters" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black transition w-full md:w-auto md:ml-2">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Scores List -->
+      <div class="glassmorphism p-4 rounded" data-aos="fade-up">
+        <h2 class="text-xl mb-4">Quiz Results</h2>
+        <div id="scoresList" class="space-y-4">
+          <div class="text-center py-8 text-gray-400">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>Loading your scores...</p>
+          </div>
+        </div>
+        <div class="flex justify-between items-center mt-6">
+          <div class="text-sm text-gray-400">
+            Showing <span id="startItem">1</span> to
+            <span id="endItem">5</span> of
+            <span id="totalItems">0</span> results
+          </div>
+          <div class="flex space-x-2">
+            <button id="prevPage" class="glassmorphism-dark text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+              Previous
+            </button>
+            <button id="nextPage" class="glassmorphism-dark text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Quests Section -->
+      <div class="text-left mt-14 mb-10 text-5xl font-bold text-white">
+        Current
+        <span class="bg-[linear-gradient(to_right,white_30%,#facc15_70%)] bg-clip-text text-transparent">
+          Quests
+        </span>
+      </div>
+      <div id="studentQuestsContainer" class="flex overflow-x-auto space-x-4 pb-4"></div>
+    </main>
+    <script>
+      // Initialize Supabase Client
+      const supabase = window.supabase.createClient(
+        "https://kckasgowvaguzkdlpdyw.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8"
+      );
+      // AOS Initialization
+      AOS.init({
+        duration: 1200,
+        easing: "ease-out",
+        once: false,
+      });
+      // Transparent nav bar on scroll
+      window.addEventListener("scroll", function () {
+        const navbar = document.getElementById("navbar");
+        navbar.style.opacity = window.scrollY > 50 ? "0.7" : "1";
+      });
+      // Mobile Menu Toggle
+      document.getElementById("menu-toggle").addEventListener("click", () => {
+        document
+          .getElementById("mobile-menu")
+          .classList.remove("translate-x-full");
+      });
+      document.getElementById("menu-close").addEventListener("click", () => {
+        document
+          .getElementById("mobile-menu")
+          .classList.add("translate-x-full");
+      });
+      // Sign Out Functionality
+      document.addEventListener("DOMContentLoaded", () => {
+        const signOutModal = document.getElementById("signOutModal");
+        const closeSignOutModal = document.getElementById("closeSignOutModal");
+        const cancelSignOut = document.getElementById("cancelSignOut");
+        const confirmSignOut = document.getElementById("confirmSignOut");
+        const signOutBtn = document.getElementById("sign-out-btn");
+        const openSignOutModal = document.getElementById("openSignOutModal");
+        const profileMenuSignOut = document.querySelector(
+          '#profile-menu a[href*="Logout"]'
+        );
+        const showModal = (e) => {
+          e.preventDefault();
+          signOutModal.classList.remove("hidden");
+        };
+        const hideModal = () => {
+          signOutModal.classList.add("hidden");
+        };
+        if (signOutBtn) signOutBtn.addEventListener("click", showModal);
+        if (openSignOutModal) openSignOutModal.addEventListener("click", showModal);
+        if (profileMenuSignOut) profileMenuSignOut.addEventListener("click", showModal);
+        if (closeSignOutModal) closeSignOutModal.addEventListener("click", hideModal);
+        if (cancelSignOut) cancelSignOut.addEventListener("click", hideModal);
+        if (confirmSignOut) {
+          confirmSignOut.addEventListener("click", () => {
+            localStorage.removeItem("studentId");
+            localStorage.removeItem("studentFirstName");
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 300);
+          });
+        }
+      });
+      // Pagination variables
+      let currentPage = 1;
+      const itemsPerPage = 5;
+      let totalScores = 0;
+      let allScores = [];
+      let allAttempts = [];
+      let filteredScores = [];
+      // Initialize Charts
+      let scoreTrendChart, categoryChart;
+      function initializeCharts(allAttempts, latestScores) {
+      const ctxTrend = document.getElementById("scoreTrendChart").getContext("2d");
+      const ctxCategory = document.getElementById("categoryChart").getContext("2d");
+            // ── SCORE TREND – OLDEST to LATEST (LEFT to RIGHT) ─────────────────
+      // Sort scores by taken_at (ascending)
+      const sortedScores = [...latestScores].sort((a, b) => new Date(a.taken_at) - new Date(b.taken_at));
+      const sortedDates = sortedScores.map(s => new Date(s.taken_at).toLocaleDateString());
+      const sortedPercentages = sortedScores.map(s => Math.round((s.score / s.total_questions) * 100));
+      scoreTrendChart = new Chart(ctxTrend, {
+        type: "line",
+        data: {
+          labels: sortedDates.length ? sortedDates : ["No Data"],
+          datasets: [
+            {
+              label: "Score (%)",
+              data: sortedPercentages.length ? sortedPercentages : [0],
+              borderColor: "#fcd34d",
+              backgroundColor: "rgba(252, 211, 77, 0.2)",
+              fill: true,
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: 10 },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: "#374151" },
+              ticks: { padding: 5, color: "#e0e0e0" },
+            },
+            x: {
+              display: true,
+              grid: { display: false },
+              ticks: {
+                padding: 5,
+                color: "#e0e0e0",
+                maxRotation: 0,
+                minRotation: 0,
+              },
+            },
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  return `Taken: ${context[0].label}`;
+                },
+                label: function(context) {
+                  return `Score: ${context.parsed.y}%`;
+                }
+              }
+            }
+          },
+        },
+      });
+      // Get unique quiz titles (up to 5)
+      const quizTitles = [...new Set(allAttempts.map((score) => score.quiz.title))].slice(0, 5);
+      const readinessScores = quizTitles.map((title) => calculateReadiness(title, allAttempts));
+      console.log("Quiz Titles:", quizTitles, "Readiness Scores:", readinessScores);
+            // ── RADAR CHART – SHOW ONLY QUIZ NUMBER ─────────────────────
+      const quizNumbers = quizTitles.map((_, i) => `Quiz ${i + 1}`);
+      categoryChart = new Chart(ctxCategory, {
+        type: "radar",
+        data: {
+          labels: quizNumbers.length ? quizNumbers : ["No Data"],
+          datasets: [
+            {
+              label: "Your Skill Readiness (%)",
+              data: readinessScores.length ? readinessScores : [0],
+              backgroundColor: "rgba(252, 211, 77, 0.2)",
+              borderColor: "#fcd34d",
+              borderWidth: 2,
+              pointBackgroundColor: "#f59e0b",
+              pointBorderColor: "#fff",
+              pointRadius: 5,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: 10 },
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 20,
+                display: false,
+                padding: 5,
+              },
+              grid: { color: "#374151" },
+              angleLines: { color: "#374151" },
+              pointLabels: {
+                font: { size: 12, weight: "bold" },
+                color: "#e0e0e0",
+              },
+            },
+          },
+          plugins: {
+            legend: { display: false }, // Hide legend – numbers are clear
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const idx = context.dataIndex;
+                  const title = quizTitles[idx] || "Unknown";
+                  const readiness = context.parsed.r;
+                  return `${title}: ${readiness}%`;
+                },
+                title: function (context) {
+                  return `Quiz ${context[0].dataIndex + 1}`;
+                },
+              },
+            },
+          },
+        },
+      });
+      // Bonus: Show best quiz
+      if (readinessScores.length > 0) {
+        const maxIdx = readinessScores.indexOf(Math.max(...readinessScores));
+        document.getElementById("topQuizBadge").innerHTML = `
+          <i class="fas fa-medal mr-1"></i>
+          Best: Quiz #${maxIdx + 1} – ${readinessScores[maxIdx].toFixed(0)}%
+        `;
+      }
+      }
+      // Return quiz title directly
+      function getCategoryFromTopic(topic) {
+        return topic || "Unknown";
+      }
+      // Calculate readiness based on quiz title (using only quiz scores)
+      function calculateReadiness(quizTitle, attempts) {
+        const quizScores = attempts
+          .filter((score) => score.quiz.title === quizTitle)
+          .map((score) => (score.score / score.total_questions) * 100);
+        // Use only quiz scores for readiness
+        const quizAvg = quizScores.length
+          ? quizScores.reduce((a, b) => a + b, 0) / quizScores.length
+          : 0;
+        return Math.round(quizAvg);
+      }
+      // Fetch quizzes for filter dropdown
+      async function fetchQuizzes() {
+        try {
+          const { data, error } = await supabase
+            .from("quizzes")
+            .select("id, title")
+            .eq("is_active", true)
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          const quizSelect = document.getElementById("quizFilter");
+          quizSelect.innerHTML = '<option value="">All Quizzes</option>';
+          if (data && data.length > 0) {
+            data.forEach((quiz) => {
+              if (quiz && quiz.id !== undefined) {
+                const option = document.createElement("option");
+                option.value = String(quiz.id);
+                option.textContent = quiz.title || `Quiz ${quiz.id}`;
+                quizSelect.appendChild(option);
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching quizzes:", error);
+          document.getElementById("scoresList").innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to load quizzes: ${error.message}. Please try again later.</p>
+            </div>
+          `;
+        }
+      }
+      // Fetch sections for filter dropdown
+      async function fetchSections() {
+  try {
+    const { data, error } = await supabase
+      .from("student_leaderboard")
+      .select("section")
+      .not("section", "is", null)
+      .order("section", { ascending: true });
+    if (error) throw error;
+    const sectionSelect = document.getElementById("sectionFilter");
+    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+    if (data && data.length > 0) {
+      // Normalize sections to GAS1 or GAS2 (case-insensitive)
+      const normalizedSections = data
+        .map((item) => item.section?.toUpperCase())
+        .filter((section) => section === "GAS1" || section === "GAS2");
+      const uniqueSections = [...new Set(normalizedSections)];
+      uniqueSections.forEach((section) => {
+        const option = document.createElement("option");
+        option.value = section;
+        option.textContent = section; // Display as GAS1 or GAS2
+        sectionSelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching sections:", error);
+    document.getElementById("sectionFilter").innerHTML = '<option value="">All Sections</option>';
+  }
+}
+      // Fetch scores and progress
+      async function fetchScoresAndProgress(studentId) {
+        try {
+          const scoresList = document.getElementById("scoresList");
+          scoresList.innerHTML = `
+            <div class="text-center py-8 text-gray-400">
+              <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+              <p>Loading your scores...</p>
+            </div>
+          `;
+          const { data, error } = await supabase
+            .from("student_quiz_results")
+            .select(
+              `
+              id,
+              score,
+              total_questions,
+              taken_at,
+              quiz:quizzes(id, title, topic)
+            `
+            )
+            .eq("student_id", studentId)
+            .order("taken_at", { ascending: false });
+          if (error) throw error;
+          const processedData = data
+            .map((score) => ({
+              ...score,
+              quiz: score.quiz,
+            }))
+            .filter(
+              (score) => score.quiz && typeof score.quiz.id !== "undefined"
+            );
+          const { data: questData, error: questError } = await supabase
+            .from("player_quests")
+            .select(
+              `
+              id,
+              character_id,
+              quest_title,
+              status,
+              progress,
+              created_at,
+              characters(student_id)
+            `
+            )
+            .eq("characters.student_id", studentId);
+          if (questError) throw questError;
+          const { data: lessonData, error: lessonError } = await supabase
+            .from("player_lessons")
+            .select(
+              `
+              id,
+              character_id,
+              student_id,
+              lesson_title,
+              status,
+              created_at
+            `
+            )
+            .eq("student_id", studentId);
+          if (lessonError) throw lessonError;
+          allAttempts = processedData || [];
+          const quizMap = new Map();
+          allAttempts.forEach(score => {
+            const quizId = score.quiz.id;
+            if (!quizMap.has(quizId)) {
+              quizMap.set(quizId, []);
+            }
+            quizMap.get(quizId).push(score);
+          });
+          const latestScores = [];
+          quizMap.forEach((attempts, quizId) => {
+            attempts.sort((a, b) => new Date(b.taken_at) - new Date(a.taken_at)); // desc
+            const latest = { ...attempts[0] };
+            latest.attemptNumber = attempts.length;
+            latestScores.push(latest);
+          });
+          latestScores.sort((a, b) => new Date(b.taken_at) - new Date(a.taken_at)); // overall desc
+          allScores = latestScores;
+          filteredScores = [...allScores];
+          totalScores = filteredScores.length;
+          window.questProgress = questData || [];
+          window.lessonStatus = lessonData || [];
+          initializeCharts(allAttempts, allScores);
+          updatePerformanceSummary();
+          updatePagination();
+          displayScores();
+        } catch (error) {
+          console.error("Error fetching quiz scores:", error);
+          document.getElementById("scoresList").innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to load scores: ${error.message}. Please try again later.</p>
+              <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+            </div>
+          `;
+        }
+      }
+      // Update the performance summary cards
+      function updatePerformanceSummary() {
+        if (allScores.length === 0) {
+          document.getElementById("totalQuizzes").textContent = "0";
+          document.getElementById("averageScore").textContent = "0%";
+          document.getElementById("highestScore").textContent = "0%";
+          return;
+        }
+        document.getElementById("totalQuizzes").textContent = allScores.length;
+        const totalPercentage = allScores.reduce((sum, score) => {
+          return sum + (score.score / score.total_questions) * 100;
+        }, 0);
+        const averagePercentage = Math.round(totalPercentage / allScores.length);
+        document.getElementById("averageScore").textContent = `${averagePercentage}%`;
+        const highestPercentage = Math.max(
+          ...allScores.map((score) => Math.round((score.score / score.total_questions) * 100))
+        );
+        document.getElementById("highestScore").textContent = `${highestPercentage}%`;
+      }
+      // Apply filters to the scores
+      function applyFilters() {
+        const quizId = document.getElementById("quizFilter").value;
+        const dateRange = document.getElementById("dateFilter").value;
+        filteredScores = allScores.filter((score) => {
+          if (quizId && quizId.trim() !== "") {
+            const scoreQuizId = String(score.quiz.id).trim();
+            const filterQuizId = String(quizId).trim();
+            if (scoreQuizId !== filterQuizId) return false;
+          }
+          if (dateRange) {
+            const completedDate = new Date(score.taken_at);
+            if (isNaN(completedDate.getTime())) return false;
+            const now = new Date();
+            const diffTime = now - completedDate;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            if (dateRange === "week" && diffDays > 7) return false;
+            if (dateRange === "month" && diffDays > 30) return false;
+            if (dateRange === "year" && diffDays > 365) return false;
+          }
+          return true;
+        });
+        totalScores = filteredScores.length;
+        currentPage = 1;
+        updatePagination();
+        displayScores();
+      }
+      // Reset all filters
+      function resetFilters() {
+        document.getElementById("quizFilter").value = "";
+        document.getElementById("dateFilter").value = "";
+        filteredScores = [...allScores];
+        totalScores = filteredScores.length;
+        currentPage = 1;
+        updatePagination();
+        displayScores();
+      }
+      // Display scores in the list with pagination
+      function displayScores() {
+        const scoresList = document.getElementById("scoresList");
+        if (filteredScores.length === 0) {
+          scoresList.innerHTML = `
+            <div class="text-center py-8 text-gray-400">
+              <i class="fas fa-clipboard-list text-2xl mb-2"></i>
+              <p>No quiz results found matching your criteria.</p>
+            </div>
+          `;
+          return;
+        }
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, filteredScores.length);
+        const paginatedScores = filteredScores.slice(startIndex, endIndex);
+        scoresList.innerHTML = "";
+        paginatedScores.forEach((score) => {
+          const percentage = Math.round((score.score / score.total_questions) * 100);
+          let scoreColor =
+            percentage >= 80 ? "text-green-400" : percentage >= 60 ? "text-yellow-400" : "text-red-400";
+          const date = new Date(score.taken_at);
+          const formattedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const quizTitle = score.quiz?.title || "Unknown Quiz";
+          const scoreItem = document.createElement("div");
+          scoreItem.className = "score-item bg-[#171819] rounded-lg overflow-hidden";
+          scoreItem.innerHTML = `
+            <div class="p-4 cursor-pointer hover:bg-[#202221] transition">
+              <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div class="flex-1">
+                  <h3 class="font-medium text-lg">${quizTitle} (Attempt ${score.attemptNumber})</h3>
+                  <p class="text-gray-400 text-sm">${formattedDate}</p>
+                </div>
+                <div class="flex items-center justify-between md:justify-end space-x-4">
+                  <div class="text-right md:text-right">
+                    <span class="${scoreColor} font-bold text-xl">${percentage}%</span>
+                    <p class="text-gray-400 text-sm">${score.score}/${score.total_questions} correct</p>
+                  </div>
+                  <button class="toggle-details text-yellow-500 hover:text-yellow-400 flex-shrink-0">
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="progress-bar mt-3">
+                <div class="progress-fill" style="width: ${percentage}%"></div>
+              </div>
+            </div>
+            <div class="score-details bg-[#202221]">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 class="font-medium mb-2">Quiz Details</h4>
+                  <p><span class="text-gray-400">Title:</span> ${quizTitle}</p>
+                </div>
+                <div>
+                  <h4 class="font-medium mb-2">Performance Details</h4>
+                  <p><span class="text-gray-400">Score:</span> ${score.score} out of ${score.total_questions}</p>
+                  <p><span class="text-gray-400">Percentage:</span> ${percentage}%</p>
+                  <p><span class="text-gray-400">Date Completed:</span> ${formattedDate}</p>
+                </div>
+              </div>
+            </div>
+          `;
+          scoresList.appendChild(scoreItem);
+        });
+        setTimeout(() => {
+          document.querySelectorAll(".progress-fill").forEach((bar) => {
+            bar.style.width = bar.style.width;
+          });
+        }, 50);
+      }
+      // Update pagination
+      function updatePagination() {
+        const startIndex = (currentPage - 1) * itemsPerPage + 1;
+        const endIndex = Math.min(currentPage * itemsPerPage, totalScores);
+        document.getElementById("startItem").textContent = startIndex;
+        document.getElementById("endItem").textContent = endIndex;
+        document.getElementById("totalItems").textContent = totalScores;
+        document.getElementById("prevPage").disabled = currentPage === 1;
+        document.getElementById("nextPage").disabled = currentPage * itemsPerPage >= totalScores;
+      }
+      // Pagination controls
+      document.getElementById("prevPage").addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          updatePagination();
+          displayScores();
+        }
+      });
+      document.getElementById("nextPage").addEventListener("click", () => {
+        if (currentPage * itemsPerPage < totalScores) {
+          currentPage++;
+          updatePagination();
+          displayScores();
+        }
+      });
+      // Format seconds to MM:SS
+      function formatTime(seconds) {
+      if (seconds === null || seconds === undefined || isNaN(seconds) || seconds < 0) {
+        return "No Time Recorded";
+      }
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60; // int4 ensures integer values
+      return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    }
+      // Character class to GIF mapping
+      const classImages = {
+        'Pyromancer': 'Assets/pyro_idle.gif',
+        'Hunter': 'Assets/Archer_idle.gif',
+        'Warrior': 'Assets/Glad_idle.gif'
+      };
+      function getCharacterGif(studentId) {
+        return new Promise((resolve) => {
+          supabase
+            .from('characters')
+            .select('character_class')
+            .eq('student_id', studentId)
+            .single()
+            .then(({ data, error }) => {
+              if (error || !data) {
+                resolve('https://via.placeholder.com/200x200/808080/000000?text=No+Character');
+              } else {
+                resolve(classImages[data.character_class] || 'https://via.placeholder.com/200x200/808080/000000?text=No+Character');
+              }
+            });
+        });
+      }
+      // Fetch all leaderboard entries to determine rank
+      async function fetchLeaderboard(filterType = "ranking_score") {
+  try {
+    document.getElementById("leaderboardList").innerHTML = `
+      <div class="text-center py-8 text-gray-400">
+        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+        <p>Loading leaderboard...</p>
+      </div>
+    `;
+    let query = supabase
+      .from("student_leaderboard")
+      .select(
+        "student_id, full_name, grade_level, section, total_score, quizzes_taken, average_score, best_completion_time, total_questions, total_time, accuracy, average_time, ranking_score"
+      );
+    switch (filterType) {
+      case "accuracy":
+        query = query.order("accuracy", { ascending: false });
+        break;
+      case "best_time":
+        query = query
+          .order("best_completion_time", { ascending: true, nullsLast: true })
+          .not("best_completion_time", "is", null)
+          .gte("best_completion_time", 0); // Ensure non-negative for int4
+        break;
+      default:
+        query = query.order("ranking_score", { ascending: false });
+        break;
+    }
+    const sectionFilter = document.getElementById("sectionFilter").value;
+    if (sectionFilter) {
+      query = query.ilike("section", sectionFilter); // Case-insensitive filtering
+    }
+    const gradeFilter = document.getElementById("gradeFilter").value;
+    if (gradeFilter) {
+      query = query.eq("grade_level", gradeFilter);
+    }
+    query = query.limit(5); // Show top 5
+    const { data, error } = await query;
+    if (error) throw error;
+    const leaderboardList = document.getElementById("leaderboardList");
+    if (!data || data.length === 0) {
+      leaderboardList.innerHTML = `
+        <div class="text-center py-8 text-gray-400">
+          <i class="fas fa-trophy text-2xl mb-2"></i>
+          <p>No leaderboard data available for the selected filters.</p>
+        </div>
+      `;
+      return;
+    }
+    // Fetch GIFs for all players
+    const gifPromises = data.map((entry) => getCharacterGif(entry.student_id));
+    const gifs = await Promise.all(gifPromises);
+    // Generate HTML for all ranks (1-5)
+    let leaderboardHtml = "";
+    data.forEach((entry, index) => {
+      const rank = index + 1;
+      const displayValue =
+        filterType === "best_time"
+          ? formatTime(entry.best_completion_time)
+          : filterType === "accuracy"
+          ? `${(entry.accuracy || 0).toFixed(1)}%`
+          : (entry.ranking_score || 0).toFixed(1);
+      leaderboardHtml += `
+          <div class="leaderboard-card" data-aos="fade-up" data-aos-delay="${index * 100}">
+            <div class="leaderboard-header flex items-center w-full">
+              <span class="rank">${rank}</span>
+              <img src="${gifs[index]}" alt="${entry.full_name || 'Player'}" class="rounded-full" aria-label="Player avatar for ${entry.full_name || 'Player'}">
+              <div class="player-info">
+                <div class="font-medium">${entry.full_name || "Unknown"}</div>
+                <div class="score-highlight">${displayValue}</div>
+              </div>
+              <button class="toggle-details text-yellow-500 hover:text-yellow-400" aria-label="Toggle details for ${entry.full_name || 'Player'}" aria-expanded="false">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+            <div class="score-details">
+              <div class="grid grid-cols-2 gap-4 text-sm text-gray-300">
+                <div>
+                  <p><span class="text-gray-400">Grade:</span> ${entry.grade_level || "N/A"}</p>
+                  <p><span class="text-gray-400">Section:</span> ${entry.section || "N/A"}</p>
+                </div>
+                <div>
+                  <p><span class="text-gray-400">Quizzes Taken:</span> ${entry.quizzes_taken || 0}</p>
+                  <p><span class="text-gray-400">Accuracy:</span> ${(entry.accuracy || 0).toFixed(1)}%</p>
+                  <p><span class="text-gray-400">Best Time:</span> ${formatTime(entry.best_completion_time)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+    });
+    leaderboardList.innerHTML = leaderboardHtml;
+    // Add event listeners for toggle details
+    document.querySelectorAll(".leaderboard-card .leaderboard-header").forEach((header) => {
+      header.addEventListener("click", (event) => {
+        const card = header.closest(".leaderboard-card");
+        const details = card.querySelector(".score-details");
+        const isExpanded = details.classList.toggle("active");
+        const icon = header.querySelector("i");
+        icon.classList.toggle("fa-chevron-down", !isExpanded);
+        icon.classList.toggle("fa-chevron-up", isExpanded);
+        header.querySelector(".toggle-details").setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      });
+    });
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    document.getElementById("leaderboardList").innerHTML = `
+      <div class="text-center py-8 text-red-500">
+        <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+        <p>Failed to load leaderboard: ${error.message}</p>
+      </div>
+    `;
+  }
+}
+      // Fetch grade levels for filter dropdown
+      async function fetchGradeLevels() {
+  try {
+    const { data, error } = await supabase
+      .from("student_leaderboard")
+      .select("grade_level")
+      .not("grade_level", "is", null)
+      .order("grade_level", { ascending: true });
+    if (error) throw error;
+    const gradeSelect = document.getElementById("gradeFilter");
+    gradeSelect.innerHTML = '<option value="">All Grades</option>';
+    if (data && data.length > 0) {
+      // Get unique grade levels
+      const uniqueGrades = [...new Set(data.map(item => item.grade_level))].filter(grade => grade !== null);
+   
+      uniqueGrades.forEach(grade => {
+        const option = document.createElement("option");
+        option.value = grade;
+        option.textContent = `Grade ${grade}`;
+        gradeSelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching grade levels:", error);
+    document.getElementById("gradeFilter").innerHTML = '<option value="">All Grades</option>';
+  }
+}
+      // Update leaderboard based on filter
+      function updateLeaderboard() {
+  const filterType = document.getElementById("leaderboardFilter").value;
+  fetchLeaderboard(filterType);
+}
+      // Generate a random greeting
+      function getRandomGreeting(firstName) {
+        const greetings = [
+          `Welcome back, ${firstName}! Ready to conquer your quizzes today?`,
+          `Hey ${firstName}, great to see you! Let's make some learning magic happen!`,
+          `${firstName}, you're back! Dive into your scores and shine!`,
+          `Hello ${firstName}! Your next adventure in learning awaits!`,
+          `Yo ${firstName}, what's up? Time to check your progress!`,
+          `Welcome, ${firstName}! Let's see how you rank on the leaderboard!`,
+          `${firstName}, you're here! Get ready to boost your scores!`,
+          `Hi ${firstName}! Another day to learn and grow!`,
+          `Back again, ${firstName}? Your quizzes are waiting!`,
+          `Greetings, ${firstName}! Let’s make today’s study session epic!`,
+        ];
+        const randomIndex = Math.floor(Math.random() * greetings.length);
+        return greetings[randomIndex].replace("${firstName}", firstName || "Student");
+      }
+      // Fetch student's rank
+      async function fetchStudentRank(studentId) {
+  try {
+    const numericStudentId = parseInt(studentId, 10);
+    console.log("Fetching rank for studentId:", numericStudentId);
+    document.getElementById("currentRank").textContent = "Loading...";
+    const filterType = document.getElementById("leaderboardFilter").value;
+    const { data: studentData, error: studentError } = await supabase
+      .from("student_leaderboard")
+      .select("ranking_score, total_score, accuracy, best_completion_time, total_time, average_time")
+      .eq("student_id", numericStudentId)
+      .maybeSingle();
+    if (studentError) {
+      console.error("Student query error:", studentError);
+      throw studentError;
+    }
+    if (!studentData) {
+      console.log("Student not found in leaderboard");
+      document.getElementById("currentRank").textContent = "Take a quiz to get ranked!";
+      return;
+    }
+    // Fetch all leaderboard entries to determine rank
+    let query = supabase
+      .from("student_leaderboard")
+      .select("student_id, ranking_score, total_score, accuracy, best_completion_time, total_time, average_time");
+    const sectionFilter = document.getElementById("sectionFilter").value;
+    if (sectionFilter) {
+      query = query.ilike("section", sectionFilter); // Case-insensitive filtering
+    }
+    const gradeFilter = document.getElementById("gradeFilter").value;
+    if (gradeFilter) {
+      query = query.eq("grade_level", gradeFilter);
+    }
+    // Apply sorting based on filterType
+    switch (filterType) {
+      case "accuracy":
+        query = query.order("accuracy", { ascending: false });
+        break;
+      case "best_time":
+        query = query.order("best_completion_time", { ascending: true, nullsLast: true });
+        break;
+      default:
+        query = query.order("ranking_score", { ascending: false });
+        break;
+    }
+    const { data: allRanks, error: rankError } = await query;
+    if (rankError) throw rankError;
+    const rank = allRanks.findIndex(entry => entry.student_id === numericStudentId) + 1;
+    document.getElementById("currentRank").textContent = rank ? `#${rank}` : "N/A";
+  } catch (error) {
+    console.error("Error fetching student rank:", error.message);
+    document.getElementById("currentRank").textContent = "Error";
+  }
+}
+      //initialize the page
+      async function initPage() {
+        try {
+          const studentIdStr = localStorage.getItem("studentId");
+          if (!studentIdStr) {
+            document.getElementById("scoresList").innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Please log in to view your scores.</p>
+                <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+              </div>
+            `;
+            document.getElementById("leaderboardList").innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Please log in to view the leaderboard.</p>
+              </div>
+            `;
+            document.getElementById("currentRank").textContent = "N/A";
+            return;
+          }
+          const studentId = parseInt(studentIdStr, 10);
+          const { data, error } = await supabase
+            .from("student")
+            .select("student_id, full_name")
+            .eq("student_id", studentId)
+            .single();
+          if (error || !data) {
+            localStorage.removeItem("studentId");
+            localStorage.removeItem("studentFirstName");
+            document.getElementById("scoresList").innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Invalid session. Please log in again.</p>
+                <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+              </div>
+            `;
+            document.getElementById("leaderboardList").innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Invalid session. Please log in again.</p>
+              </div>
+            `;
+            document.getElementById("currentRank").textContent = "N/A";
+            return;
+          }
+          const firstName = localStorage.getItem("studentFirstName") || data.full_name.split(" ")[0];
+          localStorage.setItem("studentFirstName", firstName);
+          document.getElementById("studentGreeting").textContent = getRandomGreeting(firstName);
+          await Promise.all([
+            fetchQuizzes(),
+            fetchSections(),
+            fetchGradeLevels(),
+            fetchScoresAndProgress(studentId),
+            fetchLeaderboard(),
+            fetchStudentRank(studentId),
+          ]);
+          document.getElementById("applyFilters").addEventListener("click", applyFilters);
+          document.getElementById("resetFilters").addEventListener("click", resetFilters);
+          document.getElementById("leaderboardFilter").addEventListener("change", updateLeaderboard);
+          document.getElementById("sectionFilter").addEventListener("change", updateLeaderboard);
+          document.getElementById("gradeFilter").addEventListener("change", updateLeaderboard);
+          // Add event listener for quiz result cards
+          document.addEventListener("click", (event) => {
+            if (event.target.closest(".score-item .toggle-details")) {
+              event.stopPropagation(); // Prevent event bubbling
+              const scoreItem = event.target.closest(".score-item");
+              const details = scoreItem.querySelector(".score-details");
+              const isExpanded = details.classList.toggle("active");
+              const icon = event.target.closest(".toggle-details").querySelector("i");
+              icon.classList.toggle("fa-chevron-down", !isExpanded);
+              icon.classList.toggle("fa-chevron-up", isExpanded);
+              event.target.closest(".toggle-details").setAttribute("aria-expanded", isExpanded ? "true" : "false");
+            }
+          });
+        } catch (error) {
+          console.error("Error initializing page:", error);
+          document.getElementById("scoresList").innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to initialize page: ${error.message}. Please try again later.</p>
+              <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+            </div>
+          `;
+          document.getElementById("leaderboardList").innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to initialize page: ${error.message}. Please try again later.</p>
+            </div>
+          `;
+          document.getElementById("currentRank").textContent = "Error";
+        }
+      }
+   
+      // Student Quests Section
+      async function fetchStudentQuests() {
+        try {
+          const studentIdStr = localStorage.getItem("studentId");
+          if (!studentIdStr) {
+            console.log("No student ID found, cannot fetch quests.");
+            displayStudentQuests([]);
+            return;
+          }
+          const studentId = parseInt(studentIdStr, 10);
+          const { data: playerQuests, error } = await supabase
+            .from("player_quests")
+            .select(
+              `
+              quest_title,
+              status,
+              progress,
+              created_at,
+              character_id,
+              characters (
+                character_id,
+                character_name,
+                student_id
+              )
+            `
+            )
+            .eq("characters.student_id", studentId)
+            .not("characters", "is", null)
+            .order("created_at", { ascending: false });
+          if (error) {
+            console.error("Supabase error:", error);
+            throw error;
+          }
+          const userQuests = playerQuests.filter((quest) => {
+            const charData = quest.characters || {};
+            return charData.student_id === studentId;
+          });
+          displayStudentQuests(userQuests || []);
+        } catch (error) {
+          console.error("Error fetching student quests:", error);
+          displayStudentQuests([]);
+        }
+      }
+      function displayStudentQuests(quests) {
+        const questsContainer = document.getElementById("studentQuestsContainer");
+        questsContainer.innerHTML = "";
+        if (!quests || quests.length === 0) {
+          questsContainer.innerHTML = `
+            <div class="quest-card p-8 rounded-xl flex flex-col items-center justify-center min-w-[320px] w-full mb-4 mr-4" style="min-height:120px;">
+              <div class="quest-icon mb-3">
+                <i class="fas fa-inbox text-yellow-300 text-3xl"></i>
+              </div>
+              <div class="quest-title text-center">No current quests available</div>
+              <div class="quest-meta text-center">Check back soon for new quests!</div>
+            </div>
+          `;
+          return;
+        }
+        quests.forEach((quest, idx) => {
+          let statusColor = "";
+          if (quest.status?.toLowerCase() === "completed") statusColor = "color:#34d399";
+          else if (quest.status?.toLowerCase() === "active") statusColor = "color:#facc15";
+          else statusColor = "color:#d1d5db";
+          const card = document.createElement("div");
+          card.className = "quest-card p-5 rounded-xl flex items-center min-w-[320px] mb-4 mr-4";
+          card.innerHTML = `
+            <div class="quest-icon">
+              <i class="fas fa-scroll text-white text-2xl"></i>
+            </div>
+            <div>
+              <div class="quest-title">${quest.quest_title || "Unknown Quest"}</div>
+              <div class="quest-meta">Character: ${quest.characters?.character_name || "Unknown"}</div>
+              <div class="quest-status" style="${statusColor}">Status: ${quest.status || "Unknown"} (${quest.progress || 0}%)</div>
+              <div class="quest-date">${new Date(quest.created_at).toLocaleDateString()}</div>
+            </div>
+          `;
+          questsContainer.appendChild(card);
+        });
+      }
+      // Initialize the page
+      initPage();
+      fetchStudentQuests();
+    </script>
+  </body>
+</html>

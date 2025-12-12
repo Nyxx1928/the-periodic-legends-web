@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>My Scores | The Periodic Legends</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="/config.local.js"></script>
+    <style>
+      .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #2e3130;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #f59e0b, #fcd34d);
+        transition: width 0.5s ease-out;
+      }
+      .score-details {
+        transition: all 0.3s ease;
+        max-height: 0;
+        overflow: hidden;
+      }
+      .score-details.active {
+        max-height: 500px;
+        padding: 1rem;
+        border-top: 1px solid #374151;
+      }
+      /* Fix dropdown overflow in mobile view */
+      @media (max-width: 640px) {
+        select {
+          max-width: 100% !important;
+          width: 100% !important;
+          min-width: unset !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+        .glassmorphism select,
+        #quizFilter,
+        #dateFilter,
+        #leaderboardFilter {
+          max-width: calc(100vw - 4rem) !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .flex.flex-wrap.gap-4 {
+          overflow-x: hidden !important;
+          padding-right: 1rem;
+        }
+        .flex.flex-wrap > div {
+          flex: 1 1 100% !important;
+          max-width: 100% !important;
+          margin-bottom: 1rem;
+        }
+        #leaderboardFilter {
+          width: 100% !important;
+          max-width: none !important;
+        }
+      }
+      @media (max-width: 480px) {
+        select option {
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .flex.items-end > button {
+          flex-shrink: 0;
+          white-space: nowrap;
+          padding: 0.5rem 1rem;
+        }
+      }
+      select {
+        box-sizing: border-box;
+      }
+      select:focus {
+        outline: none;
+      }
+      .glassmorphism {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        transition: all 0.3s ease-in-out;
+      }
+      .glassmorphism-dark {
+        background: rgba(30, 32, 34, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(60, 60, 60, 0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+        transition: all 0.3s ease-in-out;
+      }
+      /* Color scheme from leaderboard cards */
+      .score-item {
+          background: rgba(60, 60, 60, 0.85);
+          border-radius: 12px;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          position: relative;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .score-item:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(250, 204, 21, 0.25);
+          border-color: #facc15;
+      }
+      .score-item .score-highlight {
+          color: #facc15;
+          font-weight: 600;
+          font-size: 1.1rem;
+      }
+      .score-item .toggle-details {
+          color: #facc15;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+      }
+      .score-item .toggle-details:hover {
+          transform: scale(1.2);
+      }
+      .score-item .score-details {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.3s ease, padding 0.3s ease;
+          background: rgba(40, 40, 40, 0.9);
+          padding: 0 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          width: 100%;
+      }
+      .score-item .score-details.active {
+          max-height: 200px;
+          padding: 1rem;
+      }
+      /* Responsive Adjustments */
+      @media (max-width: 640px) {
+        /* Main container padding */
+        main.px-8 {
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
+        }
+        main.mt-32 {
+          margin-top: 7rem !important;
+        }
+        /* Page title */
+        h1.text-5xl {
+          font-size: 2rem !important;
+        }
+        #studentGreeting {
+          font-size: 1.125rem !important;
+          margin-bottom: 1.5rem !important;
+        }
+        /* Performance Summary Section */
+        .glassmorphism.p-6 {
+          padding: 1rem !important;
+        }
+        .grid.grid-cols-1.md\:grid-cols-3 {
+          gap: 0.75rem !important;
+        }
+        .glassmorphism-dark.p-4 {
+          padding: 0.875rem !important;
+        }
+        h2.text-xl {
+          font-size: 1.125rem !important;
+          margin-bottom: 0.75rem !important;
+        }
+        h3.text-gray-300,
+        h3.text-gray-400 {
+          font-size: 0.875rem !important;
+        }
+        .text-3xl {
+          font-size: 1.75rem !important;
+        }
+        /* Filter Section */
+        .glassmorphism.p-4 {
+          padding: 1rem !important;
+        }
+        .flex.flex-wrap.gap-4 {
+          flex-direction: column;
+          gap: 1rem !important;
+        }
+        .flex.flex-wrap > div {
+          width: 100% !important;
+        }
+        .flex.items-end {
+          width: 100% !important;
+        }
+        .flex.items-end > button {
+          flex: 1;
+          min-height: 2.5rem;
+          padding: 0.625rem 0.75rem !important;
+        }
+        /* Score Items */
+        .score-item {
+          padding: 1rem !important;
+        }
+        .score-item .p-4 {
+          padding: 0.875rem !important;
+        }
+        .score-item h3 {
+          font-size: 1rem !important;
+        }
+        .score-item .text-sm {
+          font-size: 0.875rem !important;
+        }
+        .score-item .text-xl {
+          font-size: 1.125rem !important;
+        }
+        .score-item .score-details.active {
+          max-height: 400px !important;
+          padding: 0.75rem !important;
+        }
+        .score-item .score-details .grid {
+          grid-template-columns: 1fr !important;
+          gap: 0.75rem !important;
+        }
+        .score-item .score-details h4 {
+          font-size: 0.875rem !important;
+        }
+        .score-item .score-details p {
+          font-size: 0.8rem !important;
+        }
+        .score-item .toggle-details {
+          padding: 0.5rem !important;
+          min-width: 2.5rem;
+          min-height: 2.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        /* Scores List Section */
+        .glassmorphism.p-4 {
+          padding: 1rem !important;
+        }
+        /* Pagination */
+        .flex.justify-between.items-center {
+          flex-direction: column;
+          gap: 1rem;
+          align-items: stretch !important;
+        }
+        .flex.justify-between.items-center > div {
+          width: 100%;
+          text-align: center;
+        }
+        .flex.space-x-2 {
+          justify-content: center;
+          width: 100%;
+        }
+        .flex.space-x-2 > button {
+          flex: 1;
+          min-height: 2.5rem;
+          padding: 0.625rem 0.75rem !important;
+        }
+        /* Quiz Reviewer Section */
+        #quizReviewer {
+          padding: 1rem !important;
+        }
+        #quizReviewer h2 {
+          font-size: 1.125rem !important;
+        }
+        #reviewerContent .bg-\[#202221\] {
+          padding: 0.875rem !important;
+        }
+        #reviewerContent .font-semibold {
+          font-size: 0.95rem !important;
+        }
+        #reviewerContent .text-sm {
+          font-size: 0.8rem !important;
+        }
+      }
+      /* Extra small screens */
+      @media (max-width: 480px) {
+        h1.text-5xl {
+          font-size: 1.75rem !important;
+        }
+        #studentGreeting {
+          font-size: 1rem !important;
+        }
+        .text-3xl {
+          font-size: 1.5rem !important;
+        }
+        .score-item {
+          padding: 0.875rem !important;
+        }
+        .score-item h3 {
+          font-size: 0.95rem !important;
+        }
+        /* Better touch targets */
+        button,
+        select {
+          min-height: 44px;
+        }
+      }
+      /* Additional mobile improvements for better UX */
+      @media (max-width: 768px) {
+        /* Section headings */
+        h2.text-xl {
+          font-size: 1.25rem !important;
+        }
+        /* Score items - better mobile layout */
+        .score-item .flex.justify-between {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        .score-item .flex.items-center.space-x-4 {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-black text-white"
+    style="font-family: 'Inter', sans-serif"
+    data-aos-easing="ease-out-cubic"
+    data-aos-duration="1000"
+  >
+    <!-- Header -->
+<header id="navbar" class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex items-center fixed top-0 w-full z-50" data-aos="fade-down">
+  <!-- Logo -->
+  <a href="Student_Dashboard.html" class="flex items-center">
+    <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10" />
+    <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+  </a>
+  <!-- Desktop Nav -->
+  <nav class="hidden md:flex ml-16 space-x-6">
+    <a href="Student_Dashboard.html" class="hover:text-yellow-300">Dashboard</a>
+    <a href="Student_Quest.html" class="hover:text-yellow-300">Quests</a>
+    <a href="Student_Quizzes.html" class="text-yellow-300">Quizzes</a>
+    <a href="Student_Tracking.html" class="hover:text-yellow-300">Progress</a>
+  </nav>
+  <!-- Actions -->
+  <div class="ml-auto flex items-center space-x-4">
+    <button id="menu-toggle" class="md:hidden text-white text-2xl">
+      <i class="fas fa-bars"></i>
+    </button>
+    <button id="sign-out-btn" class="hidden md:flex bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">
+      Sign Out
+    </button>
+  </div>
+</header>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+      <button id="menu-close" class="text-white text-2xl self-end">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-4">
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Dashboard.html">Dashboard</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Quest.html">Quests</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition" href="Student_Quizzes.html">Quizzes</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Tracking.html">Progress</a>
+      </nav>
+      <div class="flex justify-center">
+        <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">
+          Sign Out
+        </button>
+      </div>
+    </div>
+    <!-- Sign Out Modal -->
+    <div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+      <div class="glassmorphism text-white p-8 rounded-lg w-80 shadow-lg relative">
+        <button id="closeSignOutModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">
+          &times;
+        </button>
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6">
+          Are you sure you want to sign out?
+        </p>
+        <div class="flex justify-between">
+          <button id="confirmSignOut" class="w-full bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black mr-2">
+            Yes
+          </button>
+          <button id="cancelSignOut" class="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 ml-2">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Main Content -->
+    <main class="px-8 md:px-48 mt-32">
+      <h1 class="text-5xl font-bold mb-4" data-aos="fade-right">
+        My
+        <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">
+          Quiz Scores
+        </span>
+      </h1>
+      <p id="studentGreeting" class="text-2xl mb-8 text-gray-300" data-aos="fade-right" data-aos-delay="100">Welcome back!</p>
+      <!-- Performance Summary -->
+      <div class="glassmorphism p-6 rounded-lg mb-8" data-aos="fade-up">
+        <h2 class="text-xl font-semibold mb-4">Performance Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Total Quizzes Taken</h3>
+            <p id="totalQuizzes" class="text-3xl font-bold text-yellow-400">0</p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-400 mb-2">Average Score</h3>
+            <p id="averageScore" class="text-3xl font-bold text-yellow-400">0%</p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-400 mb-2">Highest Score</h3>
+            <p id="highestScore" class="text-3xl font-bold text-yellow-400">0%</p>
+          </div>
+        </div>
+      </div>
+      <!-- Filters -->
+      <div class="glassmorphism p-4 rounded mb-6" data-aos="fade-up">
+        <h2 class="text-xl mb-4">Filter Results</h2>
+        <div class="flex flex-wrap gap-4">
+          <div class="flex-1 min-w-[150px]">
+            <label for="quizFilter" class="block text-sm font-medium text-gray-300 mb-1">Quiz</label>
+            <select id="quizFilter" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+              <option value="">All Quizzes</option>
+            </select>
+          </div>
+          <div class="flex-1 min-w-[150px]">
+            <label for="dateFilter" class="block text-sm font-medium text-gray-300 mb-1">Time Period</label>
+            <select id="dateFilter" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 w-full focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+              <option value="">All Time</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+              <option value="year">Last Year</option>
+            </select>
+          </div>
+          <div class="flex items-end w-full md:w-auto">
+            <button id="applyFilters" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition w-full md:w-auto">
+              Apply Filters
+            </button>
+          </div>
+          <div class="flex items-end w-full md:w-auto">
+            <button id="resetFilters" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black transition w-full md:w-auto md:ml-2">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Scores List -->
+      <div class="glassmorphism p-4 rounded" data-aos="fade-up">
+        <h2 class="text-xl mb-4">Quiz Results</h2>
+        <div id="scoresList" class="space-y-4">
+          <div class="text-center py-8 text-gray-400">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>Loading your scores...</p>
+          </div>
+        </div>
+        <!-- Pagination -->
+        <div class="flex justify-between items-center mt-6">
+          <div class="text-sm text-gray-400">
+            Showing <span id="startItem">1</span> to <span id="endItem">5</span> of
+            <span id="totalItems">0</span> results
+          </div>
+          <div class="flex space-x-2">
+            <button id="prevPage" class="bg-transparent border border-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Previous</button>
+            <button id="nextPage" class="bg-transparent border border-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+      <!-- Quiz Reviewer Section -->
+      <div id="quizReviewer" class="glassmorphism p-4 rounded mt-8 hidden" data-aos="fade-up">
+        <h2 class="text-xl mb-4">Quiz Reviewer</h2>
+        <div id="reviewerContent" class="space-y-4"></div>
+      </div>
+    </main>
+    <script>
+      // Initialize Supabase Client
+      const supabase = window.supabase.createClient(
+        "https://kckasgowvaguzkdlpdyw.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8"
+      );
+      console.log("Supabase initialized:", supabase);
+      // AOS Initialization
+      AOS.init({
+        duration: 1200,
+        easing: "ease-out",
+        once: false,
+      });
+      // Transparent nav bar on scroll
+      window.addEventListener("scroll", function () {
+        const navbar = document.getElementById("navbar");
+        if (window.scrollY > 50) {
+          navbar.style.opacity = "0.7";
+        } else {
+          navbar.style.opacity = "1";
+        }
+      });
+      // Mobile Menu Toggle
+      document
+        .getElementById("menu-toggle")
+        .addEventListener("click", function () {
+          document
+            .getElementById("mobile-menu")
+            .classList.remove("translate-x-full");
+        });
+      document
+        .getElementById("menu-close")
+        .addEventListener("click", function () {
+          document
+            .getElementById("mobile-menu")
+            .classList.add("translate-x-full");
+        });
+      document.addEventListener("DOMContentLoaded", function () {
+        const signOutModal = document.getElementById("signOutModal");
+        const closeSignOutModal = document.getElementById("closeSignOutModal");
+        const cancelSignOut = document.getElementById("cancelSignOut");
+        const confirmSignOut = document.getElementById("confirmSignOut");
+        const signOutBtn = document.getElementById("sign-out-btn");
+        const openSignOutModal = document.getElementById("openSignOutModal");
+        signOutBtn.addEventListener("click", function (event) {
+          event.preventDefault();
+          signOutModal.classList.remove("hidden");
+        });
+        openSignOutModal.addEventListener("click", function (event) {
+          event.preventDefault();
+          signOutModal.classList.remove("hidden");
+        });
+        closeSignOutModal.addEventListener("click", function () {
+          signOutModal.classList.add("hidden");
+        });
+        cancelSignOut.addEventListener("click", function () {
+          signOutModal.classList.add("hidden");
+        });
+        confirmSignOut.addEventListener("click", function () {
+          logoutStudent();
+        });
+        function logoutStudent() {
+          localStorage.removeItem("studentId");
+          localStorage.removeItem("studentFirstName");
+          window.location.href = "index.html";
+        }
+      });
+      // Pagination variables
+      let currentPage = 1;
+      const itemsPerPage = 5;
+      let totalScores = 0;
+      let allScores = [];
+      let allAttempts = [];
+      let filteredScores = [];
+      let questionsMap = new Map();
+      // Fetch quizzes for filter dropdown
+      async function fetchQuizzes() {
+        try {
+          const { data, error } = await supabase
+            .from("quizzes")
+            .select("id, title")
+            .eq("is_active", true)
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          const quizSelect = document.getElementById("quizFilter");
+          quizSelect.innerHTML = '<option value="">All Quizzes</option>';
+          if (data && data.length > 0) {
+            data.forEach((quiz) => {
+              if (quiz && quiz.id !== undefined) {
+                const option = document.createElement("option");
+                option.value = String(quiz.id);
+                option.textContent = quiz.title || `Quiz ${quiz.id}`;
+                quizSelect.appendChild(option);
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching quizzes:", error);
+          document.getElementById("scoresList").innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to load quizzes: ${error.message}. Please try again later.</p>
+            </div>
+          `;
+        }
+      }
+      // Fetch the student's quiz scores
+      async function fetchScores(studentId) {
+        try {
+          // Show loading state
+          const scoresList = document.getElementById("scoresList");
+          scoresList.innerHTML = `
+            <div class="text-center py-8 text-gray-400">
+              <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+              <p>Loading your scores...</p>
+            </div>
+          `;
+          // Fetch scores with related quiz data
+          const { data, error } = await supabase
+            .from("student_quiz_results")
+            .select(
+              `
+              id,
+              score,
+              total_questions,
+              taken_at,
+              quiz:quizzes(id, title, topic)
+            `
+            )
+            .eq("student_id", studentId)
+            .order("taken_at", { ascending: false });
+          if (error) throw error;
+          const processedData = data
+            .map((score) => ({
+              ...score,
+              quiz: score.quiz,
+            }))
+            .filter(
+              (score) => score.quiz && typeof score.quiz.id !== "undefined"
+            );
+          allAttempts = processedData || [];
+          const quizMap = new Map();
+          allAttempts.forEach(score => {
+            const quizId = score.quiz.id;
+            if (!quizMap.has(quizId)) {
+              quizMap.set(quizId, []);
+            }
+            quizMap.get(quizId).push(score);
+          });
+          const latestScores = [];
+          quizMap.forEach((attempts, quizId) => {
+            attempts.sort((a, b) => new Date(b.taken_at) - new Date(a.taken_at)); // desc
+            const latest = { ...attempts[0] };
+            latest.attemptNumber = attempts.length;
+            latestScores.push(latest);
+          });
+          latestScores.sort((a, b) => new Date(b.taken_at) - new Date(a.taken_at)); // overall desc
+          allScores = latestScores;
+          filteredScores = [...allScores];
+          totalScores = filteredScores.length;
+          updatePerformanceSummary();
+          updatePagination();
+          displayScores();
+        } catch (error) {
+          console.error("Error fetching quiz scores:", error);
+          const scoresList = document.getElementById("scoresList");
+          scoresList.innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to load scores: ${error.message}. Please try again later.</p>
+              <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+            </div>
+          `;
+        }
+      }
+      // Update the performance summary cards
+      function updatePerformanceSummary() {
+        if (allScores.length === 0) {
+          document.getElementById("totalQuizzes").textContent = "0";
+          document.getElementById("averageScore").textContent = "0%";
+          document.getElementById("highestScore").textContent = "0%";
+          return;
+        }
+        document.getElementById("totalQuizzes").textContent = allScores.length;
+        const totalPercentage = allScores.reduce((sum, score) => {
+          return sum + (score.score / score.total_questions) * 100;
+        }, 0);
+        const averagePercentage = Math.round(totalPercentage / allScores.length);
+        document.getElementById("averageScore").textContent = `${averagePercentage}%`;
+        const highestPercentage = Math.max(
+          ...allScores.map((score) => Math.round((score.score / score.total_questions) * 100))
+        );
+        document.getElementById("highestScore").textContent = `${highestPercentage}%`;
+      }
+      // Apply filters to the scores
+      function applyFilters() {
+        const quizId = document.getElementById("quizFilter").value;
+        const dateRange = document.getElementById("dateFilter").value;
+        filteredScores = allScores.filter((score) => {
+          if (quizId && quizId.trim() !== "") {
+            const scoreQuizId = String(score.quiz.id).trim();
+            const filterQuizId = String(quizId).trim();
+            if (scoreQuizId !== filterQuizId) return false;
+          }
+          if (dateRange) {
+            const completedDate = new Date(score.taken_at);
+            if (isNaN(completedDate.getTime())) return false;
+            const now = new Date();
+            const diffTime = now - completedDate;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            if (dateRange === "week" && diffDays > 7) return false;
+            if (dateRange === "month" && diffDays > 30) return false;
+            if (dateRange === "year" && diffDays > 365) return false;
+          }
+          return true;
+        });
+        totalScores = filteredScores.length;
+        currentPage = 1;
+        updatePagination();
+        displayScores();
+        if (quizId && quizId.trim() !== "") {
+          displayReviewer(parseInt(quizId));
+        } else {
+          document.getElementById("quizReviewer").classList.add("hidden");
+        }
+      }
+      // Reset all filters
+      function resetFilters() {
+        document.getElementById("quizFilter").value = "";
+        document.getElementById("dateFilter").value = "";
+        filteredScores = [...allScores];
+        totalScores = filteredScores.length;
+        currentPage = 1;
+        updatePagination();
+        displayScores();
+        document.getElementById("quizReviewer").classList.add("hidden");
+      }
+      // Display scores in the list with pagination
+      function displayScores() {
+        const scoresList = document.getElementById("scoresList");
+        if (filteredScores.length === 0) {
+          scoresList.innerHTML = `
+            <div class="text-center py-8 text-gray-400">
+              <i class="fas fa-clipboard-list text-2xl mb-2"></i>
+              <p>No quiz results found matching your criteria.</p>
+            </div>
+          `;
+          return;
+        }
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, filteredScores.length);
+        const paginatedScores = filteredScores.slice(startIndex, endIndex);
+        scoresList.innerHTML = "";
+        paginatedScores.forEach((score) => {
+          const percentage = Math.round((score.score / score.total_questions) * 100);
+          let scoreColor =
+            percentage >= 80 ? "text-green-400" : percentage >= 60 ? "text-yellow-400" : "text-red-400";
+          const date = new Date(score.taken_at);
+          const formattedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const quizTitle = score.quiz?.title || "Unknown Quiz";
+          const scoreItem = document.createElement("div");
+          scoreItem.className = "score-item rounded-lg overflow-hidden";
+          scoreItem.innerHTML = `
+            <div class="p-4 cursor-pointer hover:bg-[#202221] transition">
+              <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                <div class="flex-1">
+                  <h3 class="font-medium text-lg">${quizTitle} (Attempt ${score.attemptNumber})</h3>
+                  <p class="text-gray-400 text-sm">${formattedDate}</p>
+                </div>
+                <div class="flex items-center justify-between md:justify-end space-x-4">
+                  <div class="text-right md:text-right">
+                    <span class="${scoreColor} font-bold text-xl">${percentage}%</span>
+                    <p class="text-gray-400 text-sm">${score.score}/${score.total_questions} correct</p>
+                  </div>
+                  <button class="toggle-details text-yellow-500 hover:text-yellow-400 flex-shrink-0">
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="progress-bar mt-3">
+                <div class="progress-fill" style="width: ${percentage}%"></div>
+              </div>
+            </div>
+            <div class="score-details">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 class="font-medium mb-2">Quiz Details</h4>
+                  <p><span class="text-gray-400">Title:</span> ${quizTitle}</p>
+                </div>
+                <div>
+                  <h4 class="font-medium mb-2">Performance Details</h4>
+                  <p><span class="text-gray-400">Score:</span> ${score.score} out of ${score.total_questions}</p>
+                  <p><span class="text-gray-400">Percentage:</span> ${percentage}%</p>
+                  <p><span class="text-gray-400">Date Completed:</span> ${formattedDate}</p>
+                </div>
+              </div>
+            </div>
+          `;
+          scoresList.appendChild(scoreItem);
+        });
+        setTimeout(() => {
+          document.querySelectorAll(".progress-fill").forEach((bar) => {
+            bar.style.width = bar.style.width;
+          });
+        }, 50);
+      }
+      // Display reviewer for selected quiz
+      function displayReviewer(quizId) {
+        const questions = questionsMap.get(quizId) || [];
+        const content = document.getElementById("reviewerContent");
+        content.innerHTML = '';
+        if (questions.length === 0) {
+          content.innerHTML = '<p class="text-gray-400">No questions found for this quiz.</p>';
+        } else {
+          questions.forEach((q, index) => {
+            const div = document.createElement('div');
+            div.className = 'bg-[#202221] p-4 rounded-lg';
+            div.innerHTML = `
+              <p class="font-semibold mb-2">Question ${index + 1}: ${q.question_text}</p>
+              <ul class="space-y-1 text-sm">
+                <li>A: ${q.choice_a}</li>
+                <li>B: ${q.choice_b}</li>
+                <li>C: ${q.choice_c}</li>
+                <li>D: ${q.choice_d}</li>
+              </ul>
+              <p class="mt-3 text-green-400 font-medium">Correct Answer: ${q.correct_answer} - ${q[`choice_${q.correct_answer.toLowerCase()}`]}</p>
+            `;
+            content.appendChild(div);
+          });
+        }
+        document.getElementById("quizReviewer").classList.remove('hidden');
+      }
+      // Update pagination controls
+      function updatePagination() {
+        const startIndex = (currentPage - 1) * itemsPerPage + 1;
+        const endIndex = Math.min(currentPage * itemsPerPage, totalScores);
+        document.getElementById("startItem").textContent = startIndex;
+        document.getElementById("endItem").textContent = endIndex;
+        document.getElementById("totalItems").textContent = totalScores;
+        document.getElementById("prevPage").disabled = currentPage === 1;
+        document.getElementById("nextPage").disabled =
+          currentPage * itemsPerPage >= totalScores;
+      }
+      // Go to previous page
+      function goToPrevPage() {
+        if (currentPage > 1) {
+          currentPage--;
+          updatePagination();
+          displayScores();
+        }
+      }
+      // Go to next page
+      function goToNextPage() {
+        if (currentPage * itemsPerPage < totalScores) {
+          currentPage++;
+          updatePagination();
+          displayScores();
+        }
+      }
+      // Initialize the page
+      async function initPage() {
+        try {
+          // Check for studentId in localStorage
+          const studentId = localStorage.getItem("studentId");
+          if (!studentId) {
+            document.getElementById("scoresList").innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Please log in to view your scores.</p>
+                <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+              </div>
+            `;
+            console.error("Student ID not found in localStorage");
+            return;
+          }
+          // Validate studentId against the student table
+          const { data, error } = await supabase
+            .from("student")
+            .select("student_id")
+            .eq("student_id", studentId)
+            .single();
+          if (error || !data) {
+            localStorage.removeItem("studentId");
+            localStorage.removeItem("studentFirstName");
+            document.getElementById("scoresList").innerHTML = `
+              <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Invalid session. Please log in again.</p>
+                <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+              </div>
+            `;
+            console.error(
+              "Invalid student ID:",
+              error?.message || "Student not found"
+            );
+            return;
+          }
+          // Update greeting
+          const studentFirstName =
+            localStorage.getItem("studentFirstName") || "Student";
+          document.getElementById(
+            "studentGreeting"
+          ).textContent = `Welcome back, ${studentFirstName}!`;
+          // Fetch data
+          await fetchQuizzes();
+          await fetchScores(studentId);
+          // Fetch questions for all unique quizzes
+          const quizIds = [...new Set(allScores.map(score => score.quiz.id))];
+          if (quizIds.length > 0) {
+            const { data: questionsData, error: questionsError } = await supabase
+              .from("questions")
+              .select("id, quiz_id, question_text, correct_answer, choice_a, choice_b, choice_c, choice_d")
+              .in("quiz_id", quizIds)
+              .order("id", { ascending: true });
+            if (questionsError) {
+              console.error("Error fetching questions:", questionsError);
+            } else if (questionsData) {
+              questionsData.forEach(q => {
+                if (!questionsMap.has(q.quiz_id)) {
+                  questionsMap.set(q.quiz_id, []);
+                }
+                questionsMap.get(q.quiz_id).push(q);
+              });
+            }
+          }
+          // Set up event listeners
+          document
+            .getElementById("applyFilters")
+            .addEventListener("click", applyFilters);
+          document
+            .getElementById("resetFilters")
+            .addEventListener("click", resetFilters);
+          document
+            .getElementById("prevPage")
+            .addEventListener("click", goToPrevPage);
+          document
+            .getElementById("nextPage")
+            .addEventListener("click", goToNextPage);
+          // Set up score detail toggles
+          document.addEventListener("click", function (event) {
+            if (event.target.closest(".toggle-details")) {
+              const scoreItem = event.target.closest(".score-item");
+              const details = scoreItem.querySelector(".score-details");
+              const isExpanded = details.classList.toggle("active");
+              const icon = event.target
+                .closest(".toggle-details")
+                .querySelector("i");
+              icon.classList.toggle("fa-chevron-down", !isExpanded);
+              icon.classList.toggle("fa-chevron-up", isExpanded);
+            }
+          });
+        } catch (error) {
+          console.error("Error initializing page:", error);
+          document.getElementById("scoresList").innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+              <p>Failed to initialize page: ${error.message}. Please try again later.</p>
+              <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Go to Login</a>
+            </div>
+          `;
+        }
+      }
+      // Call initPage on page load
+      document.addEventListener("DOMContentLoaded", initPage);
+    </script>
+  </body>
+</html>

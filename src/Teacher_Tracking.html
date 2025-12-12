@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking | TPL</title>
+    <!-- Add empty favicon to suppress 404 -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css">
+    <!-- Add Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="/config.local.js"></script>
+    <style>
+        /* Table Hover (match Teacher_Scores.html) */
+        table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        table tbody tr:hover {
+            background: rgba(255,255,255,0.05) !important;
+        }
+        /* Glassmorphism Utility */
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            transition: all 0.3s ease-in-out;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        #characterDisplay {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 300px;
+        }
+        #characterImage {
+            max-width: 100%;
+            max-height: 70%;
+            width: 160px;
+            height: 160px;
+        }
+        #characterName {
+            font-size: 1.25rem;
+        }
+        #characterClass {
+            font-size: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 300px;
+            max-height: 400px;
+        }
+        #improvementList li {
+            position: relative;
+            padding-left: 1.5rem;
+            color: #d1d5db;
+        }
+        #improvementList li:before {
+            content: '\f071';
+            font-family: 'remixicon';
+            position: absolute;
+            left: 0;
+            color: #facc15;
+            font-size: 1rem;
+        }
+        .student-card {
+            transition: transform 0.3s ease;
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
+        }
+        .student-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin: 0 auto 0.5rem;
+            display: block;
+        }
+        .student-card img[src*="Archer_idle.gif"] {
+            transform: scale(1.5);
+            transform-origin: center;
+        }
+        .student-card h3 {
+            text-align: left;
+        }
+        .student-card p {
+            text-align: left;
+        }
+        #searchSortContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        #studentSearch {
+            width: 100%;
+            max-width: 100%;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        #studentSort {
+            width: 100%;
+            max-width: 100%;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        #toggleStudents {
+            width: 100%;
+            max-width: 100%;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        @media (min-width: 640px) {
+            #searchSortContainer {
+                flex-direction: row;
+                gap: 1rem;
+                justify-content: flex-end;
+                width: auto;
+                margin-left: auto;
+            }
+            #studentSearch {
+                width: 256px;
+                max-width: 256px;
+            }
+            #studentSort {
+                width: 200px;
+                max-width: 200px;
+            }
+            #toggleStudents {
+                width: auto;
+                max-width: 200px;
+            }
+        }
+        @media (min-width: 768px) {
+            .chart-section {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+            #characterDisplay {
+                min-height: 350px;
+            }
+            #characterImage {
+                width: 256px;
+                height: 256px;
+            }
+            #characterName {
+                font-size: 1.5rem;
+            }
+            #characterClass {
+                font-size: 1.125rem;
+            }
+            .chart-container {
+                min-height: 350px;
+                max-height: 450px;
+            }
+            .student-card img {
+                width: 100px;
+                height: 100px;
+            }
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                min-height: 300px;
+                max-height: 350px;
+            }
+            #searchSortContainer {
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white" data-aos-easing="ease-out-cubic" data-aos-duration="1000">
+<!-- Header with Glassmorphism (Desktop Navbar) -->
+<header id="navbar" class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50" data-aos="fade-down">
+    <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="Teacher_Dashboard.html" class="flex items-center">
+            <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10">
+            <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+            <a href="Teacher_Dashboard.html" class="hover:text-yellow-300">Dashboard</a>
+            <a href="Teacher_Quiz.html" class="hover:text-yellow-300">Quizzes</a>
+            <a href="Teacher_Quest.html" class="hover:text-yellow-300">Quests</a>
+            <a href="Teacher_Scores.html" class="hover:text-yellow-300">Scores</a>
+            <a href="Teacher_Tracking.html" class="text-yellow-300">Tracking</a>
+            <a href="Teacher_Resources.html" class="hover:text-yellow-300">Resources</a>
+        </nav>
+    </div>
+    <!-- Sign Out (Desktop) -->
+    <div class="relative hidden md:flex space-x-4">
+        <button id="sign-out-btn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">
+            Sign Out
+        </button>
+    </div>
+    <!-- Mobile menu burger -->
+    <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+
+<!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+      <button id="menu-close" class="text-white text-2 self-end">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-4">
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Teacher_Dashboard.html">Dashboard</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Teacher_Quiz.html">Quizzes</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Teacher_Quest.html">Quests</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Teacher_Scores.html">Scores</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition" href="Teacher_Tracking.html">Tracking</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Teacher_Resources.html">Resources</a>
+    </nav>
+      <div class="flex justify-center">
+        <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Sign Out Modal -->
+    <div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+      <div class="glassmorphism text-white p-8 rounded-lg w-80 shadow-lg relative">
+        <button id="closeSignOutModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">
+          &times;
+        </button>
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6">
+          Are you sure you want to sign out?
+        </p>
+        <div class="flex justify-between">
+          <button id="confirmSignOut" class="w-full bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black mr-2">
+            Yes
+          </button>
+          <button id="cancelSignOut" class="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 ml-2">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Main Content -->
+    <main class="p-4 md:p-8 mt-32 glassmorphism">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4" data-aos="fade-right">Student
+            <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">
+                Tracking
+            </span>
+        </h1>
+        <p class="text-xl md:text-2xl mb-8 text-gray-300" data-aos="fade-right" data-aos-delay="100">
+            Welcome! Select a student to view their quiz scores, quest progress, and analytics.
+        </p>
+
+        <!-- All Students Overview -->
+    <div class="bg-[#2e3130] p-4 md:p-6 rounded-lg mb-8 glassmorphism" data-aos="fade-up" data-aos-delay="150">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
+                <h2 class="text-xl font-semibold">Students Overview</h2>
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <div id="searchSortContainer">
+                        <input id="studentSearch" type="text" placeholder="Search students..." class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                        <select id="studentSort" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none">
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="quiz-asc">Quiz Status (Best-Worst)</option>
+                            <option value="quiz-desc">Quiz Status (Worst-Best)</option>
+                            <option value="quest-asc">Quest Status (Best-Worst)</option>
+                            <option value="quest-desc">Quest Status (Worst-Best)</option>
+                        </select>
+                        <button id="toggleStudents" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition">Show All Students</button>
+                    </div>
+                </div>
+            </div>
+            <div id="studentsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Student cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Analytics -->
+    <div class="bg-[#2e3130] p-4 md:p-6 rounded-lg mb-8 glassmorphism" data-aos="fade-up" data-aos-delay="200">
+            <h2 class="text-xl font-semibold mb-4">Individual Performance</h2>
+            <div class="mb-4">
+                <label for="studentSelect" class="block text-sm font-medium text-gray-300 mb-1">Select Student</label>
+                <select id="studentSelect" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none w-full md:w-1/4">
+                    <option value="">Select a student</option>
+                </select>
+            </div>
+            <div class="chart-section grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <div class="bg-[#171819] p-3 md:p-4 rounded-lg glassmorphism">
+                    <h3 class="text-gray-400 mb-2">Quiz Score Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="quizScoreChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-[#171819] p-3 md:p-4 rounded-lg glassmorphism">
+                    <h3 class="text-gray-400 mb-2">Student Character & Improvement</h3>
+                    <div id="characterDisplay" class="flex flex-col items-start space-y-4 p-4">
+                        <div class="text-left w-full">
+                            <h4 id="characterName" class="text-lg font-semibold"></h4>
+                            <p id="characterClass" class="text-yellow-400"></p>
+                        </div>
+                        <img id="characterImage" src="" alt="Character" class="w-64 h-64 md:w-32 md:h-32 object-contain self-center">
+                        <div class="w-full">
+                            <h4 class="text-gray-400 mb-2">Areas for Improvement</h4>
+                            <ul id="improvementList" class="text-left space-y-2 text-gray-300">
+                                <li class="italic">Select a student to view areas needing improvement</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-[#171819] p-3 md:p-4 rounded-lg glassmorphism">
+                    <h3 class="text-gray-400 mb-2">Predicted Performance Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+    <div class="bg-[#2e3130] p-4 md:p-6 rounded-lg mb-8 glassmorphism" data-aos="fade-up" data-aos-delay="100">
+            <h2 class="text-xl font-semibold mb-4">Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="quizFilter" class="block text-sm font-medium text-gray-300 mb-1">Quiz</label>
+                    <select id="quizFilter" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none w-full">
+                        <option value="">All Quizzes</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="questFilter" class="block text-sm font-medium text-gray-300 mb-1">Quest</label>
+                    <select id="questFilter" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none w-full">
+                        <option value="">All Quests</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dateRangeFilter" class="block text-sm font-medium text-gray-300 mb-1">Date Range</label>
+                    <select id="dateRangeFilter" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none w-full">
+                        <option value="">All Time</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="percentageFilter" class="block text-sm font-medium text-gray-300 mb-1">Score Percentage</label>
+                    <select id="percentageFilter" class="bg-[#171819] border border-[#202221] text-white rounded px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:outline-none w-full">
+                        <option value="">All Scores</option>
+                        <option value="excellent">Excellent (80%+)</option>
+                        <option value="good">Good (60-79%)</option>
+                        <option value="needsImprovement">Needs Improvement (<60%)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4">
+                <button id="applyFilters" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">Apply Filters</button>
+                <button id="resetFilters" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Reset</button>
+            </div>
+        </div>
+
+        <!-- Quiz Scores -->
+    <div class="bg-[#2e3130] p-4 md:p-6 rounded-lg mb-8 glassmorphism" data-aos="fade-up" data-aos-delay="300">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Quiz Scores</h2>
+                <button id="exportScores" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition">
+                    <i class="fas fa-download mr-2"></i>Export to CSV
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm md:text-base">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Quiz</th>
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Score</th>
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Date Taken</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quizScoresTable">
+                        <tr><td colspan="3" class="py-4 text-center text-gray-400">Select a student to view scores</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center mt-4 gap-4">
+                <p id="scoresPagination" class="text-sm text-gray-400">Showing 1 to 10 of 0 results</p>
+                <div class="flex space-x-2">
+                    <button id="scoresPrev" class="bg-transparent border border-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Previous</button>
+                    <button id="scoresNext" class="bg-transparent border border-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quest Progress -->
+    <div class="bg-[#2e3130] p-4 md:p-6 rounded-lg mb-40 glassmorphism" data-aos="fade-up" data-aos-delay="400">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Quest Progress</h2>
+                <button id="exportQuests" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition">
+                    <i class="fas fa-download mr-2"></i>Export to CSV
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm md:text-base">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Quest Title</th>
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Character</th>
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Status</th>
+                            <th class="py-2 px-2 md:px-4 whitespace-nowrap">Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="questProgressTable">
+                        <tr><td colspan="5" class="py-4 text-center text-gray-400">Select a student to view quest progress</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center mt-4 gap-4">
+                <p id="questsPagination" class="text-sm text-gray-400">Showing 1 to 10 of 0 results</p>
+                <div class="flex space-x-2">
+                    <button id="questsPrev" class="bg-transparent border border-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Previous</button>
+                    <button id="questsNext" class="bg-transparent border border-gray-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Quiz Details Modal -->
+    <div id="quizDetailsModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+    <div class="glassmorphism text-white p-8 rounded-lg w-full max-w-2xl shadow-lg relative">
+            <button id="closeQuizDetailsModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">×</button>
+            <h2 class="text-xl font-bold mb-4 text-center">Quiz Details</h2>
+            <div id="quizDetailsContent" class="text-gray-300"></div>
+            <div class="mt-6 flex justify-end">
+                <button id="closeQuizDetails" class="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Initialize Supabase Client
+    const supabase = window.supabase.createClient(
+        'https://kckasgowvaguzkdlpdyw.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+    );
+    console.log("Supabase initialized:", supabase);
+
+    AOS.init({ duration: 1200, once: false, easing: 'ease-in-out' });
+
+    // Transparent navbar on scroll
+    window.addEventListener('scroll', () => {
+        const navbar = document.getElementById('navbar');
+        navbar.style.opacity = window.scrollY > 50 ? '0.7' : '1';
+    });
+
+    // Mobile menu toggle
+    document.getElementById('menu-toggle').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.remove('translate-x-full');
+    });
+    document.getElementById('menu-close').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.add('translate-x-full');
+    });
+
+    // === FULL SIGN-OUT + SESSION PROTECTION ===
+    document.addEventListener("DOMContentLoaded", function () {
+        const signOutModal = document.getElementById('signOutModal');
+        const closeSignOutModal = document.getElementById('closeSignOutModal');
+        const cancelSignOut = document.getElementById('cancelSignOut');
+        const confirmSignOut = document.getElementById('confirmSignOut');
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const openSignOutModal = document.getElementById('openSignOutModal');
+
+        // Open modal
+        signOutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            signOutModal.classList.remove('hidden');
+        });
+        openSignOutModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            signOutModal.classList.remove('hidden');
+            document.getElementById('mobile-menu').classList.add('translate-x-full');
+        });
+
+        // Close modal
+        closeSignOutModal.addEventListener('click', () => signOutModal.classList.add('hidden'));
+        cancelSignOut.addEventListener('click', () => signOutModal.classList.add('hidden'));
+
+        // Confirm sign out
+        confirmSignOut.addEventListener('click', logoutTeacher);
+
+        function logoutTeacher() {
+            localStorage.removeItem("teacherId");
+            localStorage.removeItem("teacherFirstName");
+
+            // Prevent back button
+            history.pushState(null, null, location.href);
+            window.onpopstate = () => history.go(1);
+
+            window.location.href = "index.html";
+        }
+
+        // === BLOCK ACCESS IF NOT LOGGED IN ===
+        if (!localStorage.getItem('teacherId')) {
+            document.body.innerHTML = `
+                <div class="fixed inset-0 bg-black flex items-center justify-center">
+                    <div class="text-center text-white p-8">
+                        <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+                        <h1 class="text-4xl font-bold mb-2">Access Denied</h1>
+                        <p class="text-xl mb-6">You must be logged in to view this page.</p>
+                        <button onclick="window.location.href='index.html'" 
+                                class="px-8 py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition text-lg font-semibold">
+                            Go to Login
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // Back-button protection
+        history.pushState(null, null, location.href);
+        window.onpopstate = () => history.go(1);
+
+        // Personalized greeting
+        const teacherName = localStorage.getItem("teacherFirstName");
+        const greeting = document.querySelector("main p.text-xl");
+        if (greeting) {
+            greeting.textContent = teacherName
+                ? `Welcome back, ${teacherName}! Select a student to track their progress.`
+                : "Welcome, Teacher! Select a student to begin.";
+        }
+
+        // === NOW SAFE TO LOAD DATA ===
+        initializeCharts();
+        fetchStudents();
+        fetchQuizzes();
+        fetchQuests();
+    });
+
+    // === YOUR FULL TRACKING LOGIC (UNCHANGED + SECURE) ===
+    let currentQuizPage = 1;
+    let currentQuestPage = 1;
+    const recordsPerPage = 10;
+    let currentScores = [];
+    let currentQuests = [];
+    let showAllStudents = false;
+    let quizScoreChart;
+    let predictionChart;
+
+    function calculateLinearRegression(x, y) {
+        const n = x.length;
+        if (n === 0) return { slope: 0, intercept: 0 };
+        const sumX = x.reduce((a, b) => a + b, 0);
+        const sumY = y.reduce((a, b) => a + b, 0);
+        const sumXY = x.reduce((s, xi, i) => s + xi * y[i], 0);
+        const sumXX = x.reduce((s, xi) => s + xi * xi, 0);
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        return { slope, intercept };
+    }
+
+    function predictScores(scores) {
+        if (scores.length < 2) return { historical: [], predicted: [] };
+        const x = scores.map((_, i) => i + 1);
+        const y = scores.map(s => (s.score / s.total_questions) * 100);
+        const { slope, intercept } = calculateLinearRegression(x, y);
+        const historical = scores.map((s, i) => ({
+            x: new Date(s.taken_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            y: y[i]
+        }));
+        const predicted = [];
+        const lastDate = new Date(scores[scores.length - 1].taken_at);
+        for (let i = 1; i <= 3; i++) {
+            const futureX = x.length + i;
+            const predY = slope * futureX + intercept;
+            const futureDate = new Date(lastDate);
+            futureDate.setDate(lastDate.getDate() + i * 7);
+            predicted.push({
+                x: futureDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                y: Math.max(0, Math.min(100, predY))
+            });
+        }
+        return { historical, predicted };
+    }
+
+    function initializeCharts() {
+        if (quizScoreChart) quizScoreChart.destroy();
+        if (predictionChart) predictionChart.destroy();
+
+        quizScoreChart = new Chart(document.getElementById('quizScoreChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['Excellent (80%+)', 'Good (60–79%)', 'Needs Improvement (<60%)'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#10B981', '#FBBF24', '#EF4444'],
+                    borderColor: ['#10B981', '#FBBF24', '#EF4444'],
+                    borderWidth: 2
+                }],
+                quizCount: 0
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#fff', font: { size: 12 } } }
+                }
+            },
+            plugins: [{
+                id: 'centerText',
+                afterDraw(chart) {
+                    const ctx = chart.ctx;
+                    const { width, height } = chart;
+                    const count = chart.data.quizCount || 0;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = '16px Inter';
+                    ctx.fillStyle = '#D1D5DB';
+                    ctx.fillText(`${count} Quiz${count === 1 ? '' : 'zes'}`, width / 2, height / 2);
+                    ctx.restore();
+                }
+            }]
+        });
+
+        predictionChart = new Chart(document.getElementById('predictionChart').getContext('2d'), {
+            type: 'line',
+            data: { datasets: [
+                { label: 'Past', data: [], borderColor: '#10B981', backgroundColor: '#10B98130', tension: 0.3 },
+                { label: 'Future', data: [], borderColor: '#FBBF24', borderDash: [5,5], tension: 0.3 }
+            ]},
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 100, ticks: { color: '#fff' }, title: { display: true, text: 'Score (%)', color: '#fff' } },
+                    x: { ticks: { color: '#fff' }, title: { display: true, text: 'Date', color: '#fff' } }
+                },
+                plugins: { legend: { labels: { color: '#fff' } } }
+            }
+        });
+    }
+
+    function updatePredictionChart(scores) {
+        const { historical, predicted } = predictScores(scores);
+        predictionChart.data.datasets[0].data = historical;
+        predictionChart.data.datasets[1].data = predicted;
+        predictionChart.data.labels = [...historical.map(d => d.x), ...predicted.map(d => d.x)];
+        predictionChart.update();
+    }
+
+    async function fetchStudents() {
+        const { data, error } = await supabase.from('student').select('student_id, full_name');
+        if (error) {
+            console.error('Error fetching students:', error.message, error);
+            return;
+        }
+        const studentSelect = document.getElementById('studentSelect');
+        studentSelect.innerHTML = '<option value="">Select a student</option>';
+        data.forEach(student => {
+            const option = document.createElement('option');
+            option.value = student.student_id;
+            option.textContent = student.full_name;
+            studentSelect.appendChild(option);
+        });
+        fetchAllStudentsData();
+    }
+
+    async function fetchQuizzes() {
+        const { data, error } = await supabase.from('quizzes').select('id, title, topic');
+        if (error) {
+            console.error('Error fetching quizzes:', error.message, error);
+            return;
+        }
+        const quizFilter = document.getElementById('quizFilter');
+        quizFilter.innerHTML = '<option value="">All Quizzes</option>';
+        data.forEach(quiz => {
+            const option = document.createElement('option');
+            option.value = quiz.id;
+            option.textContent = `${quiz.title} (${quiz.topic})`;
+            quizFilter.appendChild(option);
+        });
+    }
+
+    async function fetchQuests() {
+        const questFilter = document.getElementById('questFilter');
+        questFilter.innerHTML = '<option value="">All Quests</option>';
+        try {
+            const { data, error } = await supabase
+                .from('player_quests')
+                .select('quest_title')
+                .order('quest_title', { ascending: true });
+            if (error) throw error;
+            const uniqueTitles = [...new Set(data.map(item => item.quest_title))];
+            uniqueTitles.forEach(title => {
+                const option = document.createElement('option');
+                option.value = title;
+                option.textContent = title;
+                questFilter.appendChild(option);
+            });
+        } catch (err) {
+            console.error('Error fetching quest titles:', err);
+            questFilter.innerHTML = '<option value="">Quests unavailable</option>';
+        }
+    }
+
+    async function fetchAllStudentsData(search = '', sort = 'name-asc') {
+        try {
+            const { data: students } = await supabase
+                .from('student')
+                .select('student_id, full_name')
+                .order('full_name', { ascending: true });
+
+            const classImages = {
+                'Pyromancer': 'Assets/pyro_idle.gif',
+                'Hunter': 'Assets/Archer_idle.gif',
+                'Warrior': 'Assets/Glad_idle.gif'
+            };
+            const defaultImage = 'https://via.placeholder.com/64/808080/000000?text=Unknown';
+
+            let studentsData = await Promise.all(students.map(async (student) => {
+                let character = null;
+                try {
+                    const { data: charData } = await supabase
+                        .from('characters')
+                        .select('character_name, character_class')
+                        .eq('student_id', student.student_id)
+                        .single();
+                    character = charData || null;
+                } catch (err) { console.error(err); }
+
+                const { data: scores } = await supabase
+                    .from('student_quiz_results')
+                    .select('score, total_questions')
+                    .eq('student_id', student.student_id);
+
+                let quizStatus = 'No Quizzes';
+                let quizScore = 0;
+                if (scores && scores.length > 0) {
+                    quizScore = scores.reduce((sum, s) => sum + (s.score / s.total_questions) * 100, 0) / scores.length;
+                    quizStatus = quizScore >= 80 ? 'Excellent' : quizScore >= 60 ? 'Good' : 'Needs Improvement';
+                }
+
+                const { data: quests } = await supabase
+                    .from('player_quests')
+                    .select('progress, status, characters!inner(student_id)')
+                    .eq('characters.student_id', student.student_id);
+
+                let questStatus = 'No Quests';
+                let questProgress = 0;
+                if (quests && quests.length > 0) {
+                    questProgress = quests.reduce((sum, q) => sum + q.progress, 0) / quests.length;
+                    questStatus = questProgress >= 80 ? 'Excellent' : questProgress >= 50 ? 'Good' : 'Needs Improvement';
+                }
+
+                return {
+                    student_id: student.student_id,
+                    full_name: student.full_name,
+                    character_name: character?.character_name || 'No Character',
+                    character_image: character?.character_class ? classImages[character.character_class] || defaultImage : defaultImage,
+                    quizStatus,
+                    questStatus,
+                    quizScore,
+                    questProgress
+                };
+            }));
+
+            if (search) {
+                studentsData = studentsData.filter(s =>
+                    s.full_name.toLowerCase().includes(search.toLowerCase()) ||
+                    s.character_name.toLowerCase().includes(search.toLowerCase())
+                );
+            }
+
+            studentsData.sort((a, b) => {
+                if (sort === 'name-asc') return a.full_name.localeCompare(b.full_name);
+                if (sort === 'name-desc') return b.full_name.localeCompare(a.full_name);
+                if (sort === 'quiz-asc') return b.quizScore - a.quizScore;
+                if (sort === 'quiz-desc') return a.quizScore - b.quizScore;
+                if (sort === 'quest-asc') return b.questProgress - a.questProgress;
+                if (sort === 'quest-desc') return a.questProgress - b.questProgress;
+                return 0;
+            });
+
+            displayAllStudents(studentsData);
+        } catch (err) {
+            console.error('Error loading students:', err);
+            document.getElementById('studentsGrid').innerHTML = '<p class="text-center text-gray-400 col-span-full">Error loading students</p>';
+        }
+    }
+
+    function displayAllStudents(students) {
+        const grid = document.getElementById('studentsGrid');
+        grid.innerHTML = '';
+        if (students.length === 0) {
+            grid.innerHTML = '<p class="text-center text-gray-400 col-span-full">No students found</p>';
+            return;
+        }
+        const displayStudents = showAllStudents ? students : students.slice(0, 8);
+        displayStudents.forEach(student => {
+            const quizColor = student.quizStatus === 'Excellent' ? 'text-green-500' :
+                             student.quizStatus === 'Good' ? 'text-yellow-500' : 'text-red-500';
+            const questColor = student.questStatus === 'Excellent' ? 'text-green-500' :
+                               student.questStatus === 'Good' ? 'text-yellow-500' : 'text-red-500';
+            const card = document.createElement('div');
+            card.className = 'student-card bg-[#171819] p-4 rounded-lg shadow cursor-pointer';
+            card.dataset.studentId = student.student_id;
+            card.innerHTML = `
+                <img src="${student.character_image}" alt="${student.character_name}" class="mx-auto">
+                <h3 class="text-lg font-semibold text-white text-center">${student.full_name}</h3>
+                <p class="text-gray-400 text-left">Character: ${student.character_name}</p>
+                <p class="text-gray-400 text-left">Quiz Status: <span class="${quizColor}">${student.quizStatus}</span></p>
+                <p class="text-gray-400 text-left">Quest Status: <span class="${questColor}">${student.questStatus}</span></p>
+            `;
+            card.addEventListener('click', () => {
+                document.getElementById('studentSelect').value = student.student_id;
+                fetchStudentData(student.student_id);
+            });
+            grid.appendChild(card);
+        });
+        document.getElementById('toggleStudents').textContent = showAllStudents ? 'Show Fewer Students' : 'Show All Students';
+    }
+
+    document.getElementById('toggleStudents').addEventListener('click', () => {
+        showAllStudents = !showAllStudents;
+        const search = document.getElementById('studentSearch').value;
+        const sort = document.getElementById('studentSort').value;
+        fetchAllStudentsData(search, sort);
+    });
+
+    async function fetchStudentData(studentId, quizId = '', questTitle = '', dateRange = '', percentageRange = '') {
+        if (!studentId) {
+            document.getElementById('characterImage').src = '';
+            document.getElementById('characterName').textContent = '';
+            document.getElementById('characterClass').textContent = '';
+            document.getElementById('quizScoresTable').innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-400">Select a student to view scores</td></tr>';
+            document.getElementById('questProgressTable').innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">Select a student to view quest progress</td></tr>';
+            document.getElementById('improvementList').innerHTML = '<li class="italic">Select a student to view areas needing improvement</li>';
+            quizScoreChart.data.datasets[0].data = [0, 0, 0];
+            quizScoreChart.data.quizCount = 0;
+            quizScoreChart.update();
+            predictionChart.data.datasets[0].data = [];
+            predictionChart.data.datasets[1].data = [];
+            predictionChart.data.labels = [];
+            predictionChart.update();
+            currentScores = [];
+            currentQuests = [];
+            currentQuizPage = 1;
+            currentQuestPage = 1;
+            updatePaginationButtons();
+            return;
+        }
+
+        // Character
+        try {
+            const { data: charData } = await supabase
+                .from('characters')
+                .select('character_name, character_class')
+                .eq('student_id', studentId);
+            const character = charData?.[0];
+            const classImages = { 'Pyromancer': 'Assets/pyro_idle.gif', 'Hunter': 'Assets/Archer_idle.gif', 'Warrior': 'Assets/Glad_idle.gif' };
+            const img = classImages[character?.character_class] || 'https://via.placeholder.com/64/808080/000000?text=Unknown';
+            document.getElementById('characterImage').src = img;
+            document.getElementById('characterName').textContent = character?.character_name || 'No Character';
+            document.getElementById('characterClass').textContent = character?.character_class || 'None';
+        } catch (err) {
+            console.error('Error loading character:', err);
+        }
+
+        // Quiz Scores
+        let query = supabase.from('student_quiz_results')
+            .select('student_id, quiz_id, score, total_questions, taken_at, quizzes (title, topic)')
+            .eq('student_id', studentId)
+            .order('taken_at', { ascending: true });
+        if (quizId) query = query.eq('quiz_id', quizId);
+        if (dateRange) {
+            const date = new Date();
+            date.setDate(date.getDate() - parseInt(dateRange));
+            query = query.gte('taken_at', date.toISOString());
+        }
+        const { data: scores } = await query;
+        currentScores = scores || [];
+
+        if (percentageRange) {
+            currentScores = currentScores.filter(s => {
+                const p = (s.score / s.total_questions) * 100;
+                if (percentageRange === 'excellent') return p >= 80;
+                if (percentageRange === 'good') return p >= 60 && p < 80;
+                if (percentageRange === 'needsImprovement') return p < 60;
+                return true;
+            });
+        }
+
+        updatePredictionChart(currentScores);
+        currentQuizPage = 1;
+        displayQuizScores(currentScores, currentQuizPage);
+
+        const dist = { excellent: 0, good: 0, needsImprovement: 0 };
+        currentScores.forEach(s => {
+            const p = (s.score / s.total_questions) * 100;
+            if (p >= 80) dist.excellent++;
+            else if (p >= 60) dist.good++;
+            else dist.needsImprovement++;
+        });
+        quizScoreChart.data.datasets[0].data = [dist.excellent, dist.good, dist.needsImprovement];
+        quizScoreChart.data.quizCount = currentScores.length;
+        quizScoreChart.update();
+
+        // Quest Progress
+        let qQuery = supabase.from('player_quests')
+            .select('quest_title, status, progress, created_at, characters!inner(character_name, student_id)')
+            .eq('characters.student_id', studentId);
+        if (questTitle) qQuery = qQuery.eq('quest_title', questTitle);
+        if (dateRange) {
+            const date = new Date();
+            date.setDate(date.getDate() - parseInt(dateRange));
+            qQuery = qQuery.gte('created_at', date.toISOString());
+        }
+        const { data: quests } = await qQuery;
+        currentQuests = quests || [];
+        currentQuestPage = 1;
+        displayQuestProgress(currentQuests, currentQuestPage);
+
+        displayImprovementAreas(currentScores, currentQuests);
+    }
+
+    function updatePaginationButtons() {
+        document.getElementById('scoresPrev').disabled = currentQuizPage === 1;
+        document.getElementById('scoresNext').disabled = currentQuizPage * recordsPerPage >= currentScores.length;
+        document.getElementById('questsPrev').disabled = currentQuestPage === 1;
+        document.getElementById('questsNext').disabled = currentQuestPage * recordsPerPage >= currentQuests.length;
+    }
+
+    function displayQuizScores(scores, page) {
+        const table = document.getElementById('quizScoresTable');
+        table.innerHTML = '';
+        if (scores.length === 0) {
+            table.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-400">No quiz scores available</td></tr>';
+            document.getElementById('scoresPagination').textContent = 'Showing 0 of 0 results';
+            quizScoreChart.data.quizCount = 0;
+            quizScoreChart.update();
+            updatePaginationButtons();
+            return;
+        }
+        const start = (page - 1) * recordsPerPage;
+        const end = start + recordsPerPage;
+        scores.slice(start, end).forEach(score => {
+            const p = (score.score / score.total_questions) * 100;
+            const color = p >= 80 ? 'text-green-400' : p >= 60 ? 'text-yellow-400' : 'text-red-400';
+            const row = document.createElement('tr');
+            row.className = 'border-b border-gray-700 hover:bg-gray-800';
+            row.innerHTML = `
+                <td class="py-2 px-2 md:px-4 truncate max-w-[150px]">${score.quizzes.title} (${score.quizzes.topic})</td>
+                <td class="py-2 px-2 md:px-4 ${color} font-medium">${score.score}/${score.total_questions} (${p.toFixed(1)}%)</td>
+                <td class="py-2 px-2 md:px-4">${new Date(score.taken_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+            `;
+            table.appendChild(row);
+        });
+        document.getElementById('scoresPagination').textContent = `Showing ${start + 1} to ${Math.min(end, scores.length)} of ${scores.length} results`;
+        quizScoreChart.data.quizCount = scores.length;
+        quizScoreChart.update();
+        updatePaginationButtons();
+    }
+
+    function displayQuestProgress(quests, page) {
+        const table = document.getElementById('questProgressTable');
+        table.innerHTML = '';
+        if (quests.length === 0) {
+            table.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">No quest progress available</td></tr>';
+            document.getElementById('questsPagination').textContent = 'Showing 0 of 0 results';
+            updatePaginationButtons();
+            return;
+        }
+        const start = (page - 1) * recordsPerPage;
+        const end = start + recordsPerPage;
+        quests.slice(start, end).forEach(quest => {
+            const statusColor = quest.status?.toLowerCase() === 'completed' ? 'text-green-400' :
+                               quest.status?.toLowerCase() === 'in progress' ? 'text-yellow-400' : 'text-red-400';
+            const row = document.createElement('tr');
+            row.className = 'border-b border-gray-700 hover:bg-gray-800';
+            row.innerHTML = `
+                <td class="py-2 px-2 md:px-4 truncate max-w-[150px]">${quest.quest_title}</td>
+                <td class="py-2 px-2 md:px-4 truncate max-w-[100px]">${quest.characters.character_name}</td>
+                <td class="py-2 px-2 md:px-4 ${statusColor}">${quest.status}</td>
+                <td class="py-2 px-2 md:px-4">${new Date(quest.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+            `;
+            table.appendChild(row);
+        });
+        document.getElementById('questsPagination').textContent = `Showing ${start + 1} to ${Math.min(end, quests.length)} of ${quests.length} results`;
+        updatePaginationButtons();
+    }
+
+    function displayImprovementAreas(scores, quests) {
+        const list = document.getElementById('improvementList');
+        list.innerHTML = '';
+        const items = [];
+
+        scores?.filter(s => (s.score / s.total_questions) * 100 < 60).forEach(s => {
+            const p = ((s.score / s.total_questions) * 100).toFixed(1);
+            items.push(`Review <span class="text-yellow-400">${s.quizzes.topic}</span> (Scored <span class="text-red-400">${p}%</span> on "${s.quizzes.title}")`);
+        });
+
+        quests?.filter(q => q.progress < 50 || q.status?.toLowerCase() !== 'completed').forEach(q => {
+            items.push(`Complete <span class="text-yellow-400">${q.quest_title}</span> (Progress: ${q.progress}%)`);
+        });
+
+        if (items.length === 0) {
+            list.innerHTML = '<li class="italic text-green-400">Great job! No areas need improvement.</li>';
+        } else {
+            items.slice(0, 5).forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = item;
+                list.appendChild(li);
+            });
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('applyFilters').addEventListener('click', () => {
+        const studentId = document.getElementById('studentSelect').value;
+        const quizId = document.getElementById('quizFilter').value;
+        const questTitle = document.getElementById('questFilter').value;
+        const dateRange = document.getElementById('dateRangeFilter').value;
+        const percentageRange = document.getElementById('percentageFilter').value;
+        fetchStudentData(studentId, quizId, questTitle, dateRange, percentageRange);
+    });
+
+    document.getElementById('resetFilters').addEventListener('click', () => {
+        document.getElementById('quizFilter').value = '';
+        document.getElementById('questFilter').value = '';
+        document.getElementById('dateRangeFilter').value = '';
+        document.getElementById('percentageFilter').value = '';
+        const studentId = document.getElementById('studentSelect').value;
+        if (studentId) fetchStudentData(studentId);
+    });
+
+    let searchTimeout;
+    document.getElementById('studentSearch').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const sort = document.getElementById('studentSort').value;
+            fetchAllStudentsData(e.target.value, sort);
+        }, 300);
+    });
+
+    document.getElementById('studentSort').addEventListener('change', (e) => {
+        const search = document.getElementById('studentSearch').value;
+        fetchAllStudentsData(search, e.target.value);
+    });
+
+    document.getElementById('scoresPrev').addEventListener('click', () => {
+        if (currentQuizPage > 1) { currentQuizPage--; displayQuizScores(currentScores, currentQuizPage); }
+    });
+    document.getElementById('scoresNext').addEventListener('click', () => {
+        if (currentQuizPage * recordsPerPage < currentScores.length) { currentQuizPage++; displayQuizScores(currentScores, currentQuizPage); }
+    });
+    document.getElementById('questsPrev').addEventListener('click', () => {
+        if (currentQuestPage > 1) { currentQuestPage--; displayQuestProgress(currentQuests, currentQuestPage); }
+    });
+    document.getElementById('questsNext').addEventListener('click', () => {
+        if (currentQuestPage * recordsPerPage < currentQuests.length) { currentQuestPage++; displayQuestProgress(currentQuests, currentQuestPage); }
+    });
+
+    document.getElementById('exportScores').addEventListener('click', async () => {
+        const studentId = document.getElementById('studentSelect').value;
+        if (!studentId) return alert('Select a student');
+        const { data } = await supabase.from('student_quiz_results').select('quiz_id, score, total_questions, taken_at, quizzes (title)').eq('student_id', studentId);
+        const csv = ['Quiz Title,Score,Total,Date', ...data.map(r => `"${r.quizzes.title}",${r.score},${r.total_questions},${new Date(r.taken_at).toLocaleDateString()}`)].join('\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = `scores_${studentId}.csv`;
+        a.click();
+    });
+
+    document.getElementById('exportQuests').addEventListener('click', async () => {
+        const studentId = document.getElementById('studentSelect').value;
+        if (!studentId) return alert('Select a student');
+        const { data } = await supabase.from('player_quests').select('quest_title, status, progress, created_at, characters (character_name)').eq('characters.student_id', studentId);
+        const csv = ['Quest,Character,Status,Progress,Date', ...data.map(r => `"${r.quest_title}","${r.characters.character_name}","${r.status}",${r.progress}%,${new Date(r.created_at).toLocaleDateString()}`)].join('\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        a.download = `quests_${studentId}.csv`;
+        a.click();
+    });
+
+    document.getElementById('studentSelect').addEventListener('change', (e) => {
+        fetchStudentData(e.target.value);
+    });
+
+    // Close modal
+    document.getElementById('closeQuizDetails').addEventListener('click', () => {
+        document.getElementById('quizDetailsModal').classList.add('hidden');
+    });
+</script>
+</body>
+</html>

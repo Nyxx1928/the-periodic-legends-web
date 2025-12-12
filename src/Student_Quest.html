@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>My Quests | The Periodic Legends</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
+    />
+    <script src="/config.local.js"></script>
+    <style>
+      /* Glassmorphism Styles from Dashboard */
+      .glassmorphism {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        transition: all 0.3s ease-in-out;
+      }
+      .glassmorphism-dark {
+        background: rgba(30, 32, 34, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(60, 60, 60, 0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+        transition: all 0.3s ease-in-out;
+      }
+      /* Quest Card Styling */
+      .quest-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        transition: box-shadow 0.2s, transform 0.2s;
+      }
+      .quest-card:hover {
+        box-shadow: 0 8px 24px rgba(250, 204, 21, 0.15);
+        transform: translateY(-2px) scale(1.01);
+        border-color: #facc15;
+      }
+      .quest-icon {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.15) 60%,
+          #facc15 100%
+        );
+        border-radius: 0.75rem;
+        width: 3.5rem;
+        height: 3.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.25rem;
+      }
+      .quest-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.25rem;
+      }
+      .quest-meta {
+        font-size: 0.95rem;
+        color: #d1d5db;
+        margin-bottom: 0.15rem;
+      }
+      .quest-status {
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-bottom: 0.15rem;
+      }
+      .quest-date {
+        font-size: 0.85rem;
+        color: #a3a3a3;
+      }
+      .btn-animated {
+        transition: transform 0.2s ease, background-color 0.3s ease,
+          color 0.3s ease;
+      }
+      .btn-animated:hover {
+        transform: scale(1.05);
+      }
+      /* Mobile Responsive Styles */
+      @media (max-width: 768px) {
+        /* Main content spacing */
+        main.px-8 {
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
+          margin-top: 6rem !important;
+        }
+        
+        /* Main heading */
+        h1.text-5xl {
+          font-size: 2rem !important;
+          line-height: 1.2;
+          margin-bottom: 0.75rem !important;
+        }
+        
+        /* Greeting text */
+        p#questGreeting {
+          font-size: 1.125rem !important;
+          margin-bottom: 1.5rem !important;
+        }
+        
+        /* Section headings */
+        h2.text-xl {
+          font-size: 1.25rem !important;
+          margin-bottom: 1rem !important;
+        }
+        
+        /* Quest Overview Cards */
+        .glassmorphism.p-6 {
+          padding: 1rem !important;
+          margin-bottom: 1.5rem !important;
+        }
+        
+        .glassmorphism-dark.p-4 {
+          padding: 1rem !important;
+        }
+        
+        .glassmorphism-dark.p-4 h3 {
+          font-size: 0.875rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+        
+        .glassmorphism-dark.p-4 p.text-3xl {
+          font-size: 1.75rem !important;
+        }
+        
+        /* Filter Section */
+        .glassmorphism.p-4.rounded.mb-6 {
+          padding: 1rem !important;
+          margin-bottom: 1.5rem !important;
+        }
+        
+        .glassmorphism.p-4.rounded.mb-6 h2 {
+          font-size: 1.125rem !important;
+          margin-bottom: 1rem !important;
+        }
+        
+        /* Filter buttons - better mobile layout */
+        .flex.flex-wrap.gap-2 {
+          width: 100%;
+          gap: 0.5rem !important;
+        }
+        
+        .flex.flex-wrap.gap-2 > button {
+          flex: 1;
+          min-width: calc(50% - 0.25rem);
+          padding: 0.75rem !important;
+          font-size: 0.875rem !important;
+        }
+        
+        .flex.flex-wrap.gap-2 > button:first-child {
+          flex-basis: 100%;
+          min-width: 100%;
+        }
+        
+        /* Filter table - better mobile layout */
+        #filterTableContainer {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          border-radius: 0.5rem;
+        }
+        
+        #filterTableContainer table {
+          font-size: 0.875rem;
+          min-width: 600px;
+        }
+        
+        #filterTableContainer table th {
+          padding: 0.75rem 0.5rem !important;
+          white-space: nowrap;
+        }
+        
+        #filterTableContainer table td {
+          padding: 0.75rem 0.5rem !important;
+          white-space: nowrap;
+        }
+        
+        /* Quest cards - better mobile sizing */
+        #questsGrid {
+          flex-direction: column !important;
+          gap: 0.75rem !important;
+        }
+        
+        .quest-card {
+          min-width: 100% !important;
+          padding: 1rem !important;
+          margin-right: 0 !important;
+        }
+        
+        .quest-icon {
+          width: 2.5rem !important;
+          height: 2.5rem !important;
+          margin-right: 0.75rem !important;
+        }
+        
+        .quest-icon i {
+          font-size: 1.25rem !important;
+        }
+        
+        .quest-title {
+          font-size: 1rem !important;
+          margin-bottom: 0.25rem !important;
+        }
+        
+        .quest-meta,
+        .quest-status,
+        .quest-date {
+          font-size: 0.85rem !important;
+          margin-bottom: 0.25rem !important;
+        }
+        
+        .details-quest {
+          font-size: 0.875rem !important;
+          padding: 0.5rem 0.75rem !important;
+          margin-top: 0.5rem !important;
+        }
+      }
+      
+      @media (max-width: 640px) {
+        #questsGrid {
+          flex-direction: column !important;
+          gap: 0.5rem !important;
+        }
+        
+        /* Quest Overview - stack on mobile */
+        .grid.grid-cols-1.md\:grid-cols-3 {
+          gap: 0.75rem !important;
+        }
+        
+        /* Modal - better mobile sizing */
+        #questDetailsModal {
+          padding: 1rem !important;
+        }
+        
+        #questDetailsModal .glassmorphism {
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 1.5rem !important;
+          margin: 0 !important;
+        }
+        
+        #questDetailsModal h2 {
+          font-size: 1.125rem !important;
+        }
+        
+        #questDetailsModal p {
+          font-size: 0.875rem !important;
+        }
+        
+        /* Sign out modal mobile */
+        #signOutModal {
+          padding: 1rem !important;
+        }
+        
+        #signOutModal .glassmorphism {
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 1.5rem !important;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        /* Extra small screens */
+        main.px-8 {
+          padding-left: 0.75rem !important;
+          padding-right: 0.75rem !important;
+          margin-top: 5.5rem !important;
+        }
+        
+        h1.text-5xl {
+          font-size: 1.75rem !important;
+        }
+        
+        p#questGreeting {
+          font-size: 1rem !important;
+        }
+        
+        .glassmorphism-dark.p-4 p.text-3xl {
+          font-size: 1.5rem !important;
+        }
+        
+        .quest-card {
+          padding: 0.875rem !important;
+        }
+        
+        /* Better touch targets */
+        button,
+        select {
+          min-height: 44px;
+        }
+        
+        /* Table - smaller text for very small screens */
+        table {
+          font-size: 0.8rem;
+        }
+        
+        table th,
+        table td {
+          padding: 0.375rem !important;
+        }
+      }
+      
+      table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      
+      /* Enhanced Table Styling */
+      #filterTableContainer table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      
+      #filterTableContainer table tbody tr:hover {
+        background: rgba(250, 204, 21, 0.08);
+        transform: translateX(2px);
+      }
+      
+      #filterTableContainer table tbody td {
+        padding: 1rem 1.5rem;
+        font-size: 0.9rem;
+        color: #e5e7eb;
+      }
+      
+      /* Status Badge Styling */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .status-badge.active {
+        background: rgba(250, 204, 21, 0.2);
+        color: #facc15;
+        border: 1px solid rgba(250, 204, 21, 0.3);
+      }
+      
+      .status-badge.completed {
+        background: rgba(52, 211, 153, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.3);
+      }
+      
+      .status-badge.available {
+        background: rgba(209, 213, 219, 0.2);
+        color: #d1d5db;
+        border: 1px solid rgba(209, 213, 219, 0.3);
+      }
+      
+      /* Quest name styling */
+      .quest-name-cell {
+        font-weight: 500;
+        color: #fff;
+      }
+      
+      /* Character name styling */
+      .character-name-cell {
+        color: #d1d5db;
+      }
+      
+      /* Date styling */
+      .date-cell {
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+      
+      /* Mobile table improvements */
+      @media (max-width: 768px) {
+        #filterTableContainer {
+          border-radius: 0.5rem;
+        }
+        
+        #filterTableContainer table {
+          min-width: 100%;
+        }
+        
+        #filterTableContainer table thead th {
+          padding: 0.75rem 0.5rem;
+          font-size: 0.7rem;
+        }
+        
+        #filterTableContainer table tbody td {
+          padding: 0.75rem 0.5rem;
+          font-size: 0.8rem;
+        }
+        
+        .status-badge {
+          font-size: 0.65rem;
+          padding: 0.25rem 0.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-black text-white overflow-x-hidden"
+    style="font-family: 'Inter', sans-serif"
+    data-aos-easing="ease-out-cubic"
+    data-aos-duration="1000"
+  >
+    <!-- Header (Unchanged) -->
+    <header
+      id="navbar"
+      class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50"
+      data-aos="fade-down"
+    >
+      <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="Student_Dashboard.html" class="flex items-center">
+          <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10" />
+          <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+          <a href="Student_Dashboard.html" class="hover:text-yellow-300">Dashboard</a>
+          <a href="Student_Quest.html" class="text-yellow-300">Quests</a>
+          <a href="Student_Quizzes.html" class="hover:text-yellow-300">Quizzes</a>
+          <a href="Student_Tracking.html" class="hover:text-yellow-300">Progress</a>
+        </nav>
+      </div>
+      <div class="relative hidden md:flex space-x-4">
+        <button id="sign-out-btn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">
+          Sign Out
+        </button>
+      </div>
+      <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+      </button>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+      <button id="menu-close" class="text-white text-2 self-end">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-4">
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Dashboard.html">Dashboard</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition" href="Student_Quest.html">Quests</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Quizzes.html">Quizzes</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Tracking.html">Progress</a>
+      </nav>
+      <div class="flex justify-center">
+        <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Sign Out Modal -->
+    <div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
+      <div class="glassmorphism text-white p-6 md:p-8 rounded-lg w-full max-w-sm shadow-lg relative">
+        <button id="closeSignOutModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl transition-colors">
+          &times;
+        </button>
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6 text-sm md:text-base">
+          Are you sure you want to sign out?
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-2">
+          <button id="confirmSignOut" class="flex-1 bg-transparent border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg hover:bg-yellow-500 hover:text-black transition-all min-h-[44px] font-medium">
+            Yes
+          </button>
+          <button id="cancelSignOut" class="flex-1 bg-yellow-500 text-black px-4 py-3 rounded-lg hover:bg-yellow-600 transition-all min-h-[44px] font-medium">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>  
+
+    <!-- Quest Details Modal -->
+    <div id="questDetailsModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
+      <div
+        class="glassmorphism text-white p-6 md:p-8 rounded-lg w-full max-w-md shadow-lg relative"
+      >
+        <button
+          id="closeQuestDetailsModal"
+          class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl transition-colors"
+        >
+          ×
+        </button>
+        <h2 id="questModalTitle" class="text-xl md:text-2xl font-bold mb-4 text-yellow-400"></h2>
+        <p id="questModalDescription" class="text-gray-300 mb-4 text-sm md:text-base leading-relaxed"></p>
+        <div class="space-y-3 mb-6">
+          <p id="questModalProgress" class="text-sm md:text-base text-gray-400 flex items-center">
+            <i class="fas fa-tasks text-yellow-400 mr-2"></i>
+            <span id="questModalProgressText"></span>
+          </p>
+          <p id="questModalDeadline" class="text-sm md:text-base text-gray-400 flex items-center">
+            <i class="fas fa-calendar-alt text-yellow-400 mr-2"></i>
+            <span id="questModalDeadlineText"></span>
+          </p>
+        </div>
+        <div class="flex justify-end">
+          <button
+            id="questModalClose"
+            class="px-6 py-3 glassmorphism-dark text-white rounded-lg hover:bg-yellow-500 hover:text-black btn-animated min-h-[44px] font-medium transition-all"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main class="px-8 md:px-48 mt-28">
+      <h1 class="text-5xl font-bold mb-4" data-aos="fade-right">
+        My
+        <span
+          class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent"
+          >Quests</span
+        >
+      </h1>
+      <p
+        id="questGreeting"
+        class="text-2xl mb-8 text-gray-300"
+        data-aos="fade-right"
+        data-aos-delay="100"
+      >
+        Ready to embark on your next adventure?
+      </p>
+
+      <!-- Quest Statistics -->
+      <div class="glassmorphism p-6 rounded-lg mb-8" data-aos="fade-up">
+        <h2 class="text-xl font-semibold mb-4">Quest Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Total Quests</h3>
+            <p id="totalQuests" class="text-3xl font-bold text-yellow-400">0</p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Active Quests</h3>
+            <p id="activeQuests" class="text-3xl font-bold text-yellow-400">
+              0
+            </p>
+          </div>
+          <div class="glassmorphism-dark p-4 rounded-lg">
+            <h3 class="text-gray-300 mb-2">Completed Quests</h3>
+            <p id="completedQuests" class="text-3xl font-bold text-yellow-400">
+              0
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Updated Filters Section with Working Table -->
+      <!-- Updated Filters Section - Remove Actions column -->
+      <div class="glassmorphism p-5 md:p-6 rounded-lg mb-6" data-aos="fade-up">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 md:mb-6">
+          <h2 class="text-xl md:text-2xl font-semibold mb-4 sm:mb-0">
+            <i class="fas fa-filter text-yellow-400 mr-2"></i>Filter Quests
+          </h2>
+          <div class="flex flex-wrap gap-2 sm:gap-3">
+            <button
+              id="filter-all"
+              class="px-4 md:px-5 py-2.5 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 filter-btn btn-animated font-medium text-sm md:text-base min-h-[44px] transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              <i class="fas fa-list mr-2"></i>All Quests
+            </button>
+            <button
+              id="filter-active"
+              class="px-4 md:px-5 py-2.5 md:py-3 glassmorphism-dark border border-yellow-500/30 text-yellow-500 rounded-lg hover:bg-yellow-500 hover:text-black filter-btn btn-animated font-medium text-sm md:text-base min-h-[44px] transition-all duration-200"
+            >
+              <i class="fas fa-play-circle mr-2"></i>Active
+            </button>
+            <button
+              id="filter-completed"
+              class="px-4 md:px-5 py-2.5 md:py-3 glassmorphism-dark border border-yellow-500/30 text-yellow-500 rounded-lg hover:bg-yellow-500 hover:text-black filter-btn btn-animated font-medium text-sm md:text-base min-h-[44px] transition-all duration-200"
+            >
+              <i class="fas fa-check-circle mr-2"></i>Completed
+            </button>
+          </div>
+        </div>
+        <!-- Filter table without Actions column -->
+        <div id="filterTableContainer" class="mt-6 overflow-x-auto rounded-lg border border-white/10">
+          <table class="w-full min-w-[500px]">
+            <thead>
+              <tr class="bg-white/5 border-b border-white/10">
+                <th class="py-3 md:py-4 px-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    <i class="fas fa-scroll text-yellow-400 mr-2 text-sm"></i>Quest
+                  </div>
+                </th>
+                <th class="py-3 md:py-4 px-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    <i class="fas fa-user text-yellow-400 mr-2 text-sm"></i>Character
+                  </div>
+                </th>
+                <th class="py-3 md:py-4 px-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    <i class="fas fa-info-circle text-yellow-400 mr-2 text-sm"></i>Status
+                  </div>
+                </th>
+                <th class="py-3 md:py-4 px-4 md:px-6 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                  <div class="flex items-center">
+                    <i class="fas fa-calendar text-yellow-400 mr-2 text-sm"></i>Date
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="filterTableBody" class="divide-y divide-white/5">
+              <tr>
+                <td class="py-6 md:py-8" colspan="4">
+                  <div class="text-center text-gray-400">
+                    <i class="fas fa-spinner fa-spin text-2xl md:text-3xl mb-3"></i>
+                    <p class="text-sm md:text-base">Retrieving quests...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <section id="questList" class="mb-12">
+        <h2 class="text-xl font-semibold mb-6" data-aos="fade-up">
+          Your Quests
+        </h2>
+        <div id="questsGrid" class="flex overflow-x-auto space-x-4 pb-4">
+          <!-- Quests will be populated dynamically -->
+          <div class="text-center py-8 text-gray-400 min-w-[320px]">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>Loading your quests...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Initialize Supabase Client
+      const supabase = window.supabase.createClient(
+        "https://kckasgowvaguzkdlpdyw.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8"
+      );
+      console.log("Supabase initialized:", supabase);
+
+      // AOS Initialization
+      AOS.init({
+        duration: 1200,
+        easing: "ease-out",
+        once: false,
+      });
+
+      // Transparent nav bar on scroll
+      window.addEventListener("scroll", function () {
+        const navbar = document.getElementById("navbar");
+        navbar.style.opacity = window.scrollY > 50 ? "0.7" : "1";
+      });
+
+      // Mobile Menu Toggle
+      document.getElementById("menu-toggle").addEventListener("click", () => {
+        document
+          .getElementById("mobile-menu")
+          .classList.remove("translate-x-full");
+      });
+
+      document.getElementById("menu-close").addEventListener("click", () => {
+        document
+          .getElementById("mobile-menu")
+          .classList.add("translate-x-full");
+      });
+
+      // Sign Out Functionality
+      document.addEventListener("DOMContentLoaded", () => {
+        const signOutModal = document.getElementById("signOutModal");
+        const closeSignOutModal = document.getElementById("closeSignOutModal");
+        const cancelSignOut = document.getElementById("cancelSignOut");
+        const confirmSignOut = document.getElementById("confirmSignOut");
+        const signOutBtn = document.getElementById("sign-out-btn");
+        const openSignOutModal = document.getElementById("openSignOutModal");
+        const profileMenuSignOut = document.querySelector(
+          '#profile-menu a[href*="Logout"]'
+        );
+
+        const showModal = (e) => {
+          e.preventDefault();
+          signOutModal.classList.remove("hidden");
+        };
+
+        const hideModal = () => {
+          signOutModal.classList.add("hidden");
+        };
+
+        if (signOutBtn) signOutBtn.addEventListener("click", showModal);
+        if (openSignOutModal)
+          openSignOutModal.addEventListener("click", showModal);
+        if (profileMenuSignOut)
+          profileMenuSignOut.addEventListener("click", showModal);
+        if (closeSignOutModal)
+          closeSignOutModal.addEventListener("click", hideModal);
+        if (cancelSignOut) cancelSignOut.addEventListener("click", hideModal);
+        if (confirmSignOut) {
+          confirmSignOut.addEventListener("click", () => {
+            localStorage.removeItem("studentId");
+            localStorage.removeItem("studentFirstName");
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 300);
+          });
+        }
+      });
+
+      // Quest Data and Filtering
+      let allQuests = [];
+      let filteredQuests = [];
+
+      // Generate a random greeting
+      function getRandomGreeting(firstName) {
+        const greetings = [
+          `Welcome back, ${firstName}! Ready to conquer your quests today?`,
+          `Hey ${firstName}, great to see you! Let's embark on some epic adventures!`,
+          `${firstName}, you're back! Dive into your quests and shine!`,
+          `Hello ${firstName}! Your next quest awaits!`,
+          `Yo ${firstName}, what's up? Time to tackle your quests!`,
+          `Welcome, ${firstName}! Let's make some progress!`,
+          `${firstName}, you're here! Get ready to complete your missions!`,
+          `Hi ${firstName}! Another day to explore and learn!`,
+          `Back again, ${firstName}? Your quests are waiting!`,
+          `Greetings, ${firstName}! Let's make today's quest session epic!`,
+        ];
+        const randomIndex = Math.floor(Math.random() * greetings.length);
+        return greetings[randomIndex].replace(
+          "${firstName}",
+          firstName || "Student"
+        );
+      }
+
+      async function fetchQuests(studentId) {
+        try {
+          const questsGrid = document.getElementById("questsGrid");
+          const filterTableBody = document.getElementById("filterTableBody");
+
+          questsGrid.innerHTML = `
+            <div class="text-center py-8 text-gray-400 min-w-[320px]">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Loading your quests...</p>
+            </div>
+          `;
+
+          if (filterTableBody) {
+            filterTableBody.innerHTML = `
+              <tr>
+                <td class="py-4" colspan="5">
+                  <div class="text-center text-gray-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Retrieving quests...</p>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }
+
+          // Step 1: Fetch the student's character(s)
+          const { data: characters, error: charError } = await supabase
+            .from("characters")
+            .select("character_id, character_name")
+            .eq("student_id", studentId);
+
+          if (charError) throw charError;
+          if (!characters || characters.length === 0) {
+            filteredQuests = [];
+            displayQuests();
+            displayFilterTable();
+            return;
+          }
+
+          const characterIds = characters.map((c) => c.character_id);
+          const characterMap = Object.fromEntries(
+            characters.map((c) => [c.character_id, c.character_name])
+          );
+
+          // Step 2: Fetch quests for those character(s)
+          const { data: playerQuests, error: questError } = await supabase
+            .from("player_quests")
+            .select(
+              "id, quest_title, status, progress, created_at, last_modified, character_id"
+            )
+            .in("character_id", characterIds)
+            .order("created_at", { ascending: false });
+
+          if (questError) throw questError;
+          if (!playerQuests || playerQuests.length === 0) {
+            filteredQuests = [];
+            displayQuests();
+            displayFilterTable();
+            return;
+          }
+
+          const TOTAL_TASKS = 3;
+          allQuests = playerQuests.map((quest) => ({
+            id: quest.id,
+            title: quest.quest_title || "Unknown Quest",
+            description: "No description available",
+            category: getCategoryFromTitle(quest.quest_title),
+            status: quest.status || "Available",
+            completed_tasks: quest.progress || 0,
+            total_tasks: TOTAL_TASKS,
+            created_at: quest.created_at,
+            last_modified: quest.last_modified,
+            character_name:
+              characterMap[quest.character_id] || "Unknown Character",
+          }));
+
+          filteredQuests = [...allQuests];
+          updateQuestStats();
+          displayQuests();
+          displayFilterTable();
+        } catch (error) {
+          console.error("Error fetching quests:", error);
+          document.getElementById("questsGrid").innerHTML = `
+            <div class="text-center py-8 text-red-500 min-w-[320px]">
+                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                <p>Failed to load quests: ${error.message}</p>
+            </div>
+          `;
+
+          const filterTableBody = document.getElementById("filterTableBody");
+          if (filterTableBody) {
+            filterTableBody.innerHTML = `
+              <tr>
+                <td class="py-4" colspan="5">
+                  <div class="text-center text-red-500">
+                    <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                    <p>Failed to load quests</p>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }
+        }
+      }
+
+      function getCategoryFromTitle(title) {
+        if (!title) return "General";
+        title = title.toLowerCase();
+        if (title.includes("rocks") || title.includes("stratified"))
+          return "Geology";
+        if (title.includes("weather") || title.includes("climate"))
+          return "Meteorology";
+        if (title.includes("stars") || title.includes("planets"))
+          return "Astronomy";
+        if (title.includes("ocean") || title.includes("marine"))
+          return "Oceanography";
+        return "General";
+      }
+
+      function updateQuestStats() {
+        const totalQuests = allQuests.length;
+        const activeQuests = allQuests.filter(
+          (q) => q.status.toLowerCase() === "active"
+        ).length;
+        const completedQuests = allQuests.filter(
+          (q) => q.status.toLowerCase() === "completed"
+        ).length;
+
+        document.getElementById("totalQuests").textContent = totalQuests;
+        document.getElementById("activeQuests").textContent = activeQuests;
+        document.getElementById("completedQuests").textContent =
+          completedQuests;
+      }
+
+      function displayQuests() {
+        const questsGrid = document.getElementById("questsGrid");
+        if (filteredQuests.length === 0) {
+          questsGrid.innerHTML = `
+            <div class="quest-card p-8 rounded-xl flex flex-col items-center justify-center min-w-[320px] mb-4 mr-4" style="min-height:120px;">
+                <div class="quest-icon mb-3">
+                    <i class="fas fa-inbox text-yellow-300 text-3xl"></i>
+                </div>
+                <div class="quest-title text-center">No quests available</div>
+                <div class="quest-meta text-center">Check back soon for new quests!</div>
+                <a href="Student_Dashboard.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 btn-animated">Back to Dashboard</a>
+            </div>
+          `;
+          return;
+        }
+
+        questsGrid.innerHTML = filteredQuests
+          .map((quest) => {
+            let statusColor = "";
+            if (quest.status.toLowerCase() === "completed")
+              statusColor = "color:#34d399";
+            else if (quest.status.toLowerCase() === "active")
+              statusColor = "color:#facc15";
+            else statusColor = "color:#d1d5db";
+            const deadline = quest.last_modified
+              ? new Date(quest.last_modified).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "No deadline";
+            return `
+              <div class="quest-card p-5 rounded-xl flex items-center min-w-[320px] mb-4 mr-4" data-quest-id="${
+                quest.id
+              }" data-aos="fade-up">
+                  <div class="quest-icon">
+                      <i class="fas fa-scroll text-white text-2xl"></i>
+                  </div>
+                  <div>
+                      <div class="quest-title">${quest.title}</div>
+                      <div class="quest-meta">Character: ${
+                        quest.character_name
+                      }</div>
+                      <div class="quest-meta">Category: ${quest.category}</div>
+                      <div class="quest-status" style="${statusColor}">Status: ${
+              quest.status.charAt(0).toUpperCase() + quest.status.slice(1)
+            }</div>
+                      <div class="quest-date">${deadline}</div>
+                      <button class="details-quest mt-2 text-yellow-500 hover:text-yellow-400 btn-animated" data-quest-id="${
+                        quest.id
+                      }">Details</button>
+                  </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        // Add event listeners for details buttons
+        document.querySelectorAll(".details-quest").forEach((button) => {
+          button.addEventListener("click", () => {
+            const questId = button.getAttribute("data-quest-id");
+            showQuestDetails(questId);
+          });
+        });
+      }
+
+      function displayFilterTable() {
+        const tableBody = document.getElementById("filterTableBody");
+        if (!tableBody) return;
+
+        if (filteredQuests.length === 0) {
+          tableBody.innerHTML = `
+      <tr>
+        <td class="py-8 md:py-12" colspan="4">
+          <div class="text-center text-gray-400">
+            <i class="fas fa-inbox text-3xl md:text-4xl mb-3 text-yellow-400/50"></i>
+            <p class="text-sm md:text-base font-medium">No quests match the selected filter</p>
+            <p class="text-xs md:text-sm text-gray-500 mt-2">Try selecting a different filter option</p>
+          </div>
+        </td>
+      </tr>
+    `;
+          return;
+        }
+
+        tableBody.innerHTML = filteredQuests
+          .map((quest) => {
+            const statusLower = quest.status.toLowerCase();
+            const statusBadgeClass =
+              statusLower === "completed"
+                ? "status-badge completed"
+                : statusLower === "active"
+                ? "status-badge active"
+                : "status-badge available";
+            
+            const statusIcon =
+              statusLower === "completed"
+                ? '<i class="fas fa-check-circle mr-1.5"></i>'
+                : statusLower === "active"
+                ? '<i class="fas fa-play-circle mr-1.5"></i>'
+                : '<i class="fas fa-clock mr-1.5"></i>';
+            
+            const date = quest.last_modified
+              ? new Date(quest.last_modified).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "No date";
+
+            return `
+        <tr class="hover:bg-white hover:bg-opacity-5 transition-colors duration-200">
+          <td class="quest-name-cell">${quest.title}</td>
+          <td class="character-name-cell">
+            <div class="flex items-center">
+              <i class="fas fa-user-circle text-yellow-400/60 mr-2 text-sm"></i>
+              ${quest.character_name}
+            </div>
+          </td>
+          <td>
+            <span class="${statusBadgeClass}">
+              ${statusIcon}${quest.status.charAt(0).toUpperCase() + quest.status.slice(1)}
+            </span>
+          </td>
+          <td class="date-cell">
+            <div class="flex items-center">
+              <i class="fas fa-calendar-alt text-gray-500 mr-2 text-xs"></i>
+              ${date}
+            </div>
+          </td>
+        </tr>
+      `;
+          })
+          .join("");
+
+        // Remove the event listener code for table details buttons since Actions column is removed
+      }
+
+      function showQuestDetails(questId) {
+        const quest = allQuests.find((q) => q.id === questId);
+        if (!quest) return;
+
+        document.getElementById("questModalTitle").textContent = quest.title;
+        document.getElementById("questModalDescription").textContent =
+          quest.description || "No description available for this quest.";
+        
+        const progressText = document.getElementById("questModalProgressText");
+        if (progressText) {
+          progressText.textContent = `${quest.completed_tasks}/${quest.total_tasks} tasks completed`;
+        } else {
+          document.getElementById("questModalProgress").textContent = 
+            `Progress: ${quest.completed_tasks}/${quest.total_tasks} tasks`;
+        }
+        
+        const deadlineText = document.getElementById("questModalDeadlineText");
+        if (deadlineText) {
+          deadlineText.textContent = quest.last_modified
+            ? new Date(quest.last_modified).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "No date available";
+        } else {
+          document.getElementById("questModalDeadline").textContent = 
+            `Last Modified: ${
+              quest.last_modified
+                ? new Date(quest.last_modified).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "No deadline"
+            }`;
+        }
+
+        document.getElementById("questDetailsModal").classList.remove("hidden");
+      }
+
+      // Filter Quests
+      function applyFilters() {
+        const activeFilter =
+          document
+            .querySelector(".filter-btn.bg-yellow-500")
+            ?.id?.replace("filter-", "") || "all";
+
+        filteredQuests = allQuests.filter((quest) => {
+          return (
+            activeFilter === "all" ||
+            quest.status.toLowerCase() === activeFilter
+          );
+        });
+
+        updateQuestStats();
+        displayQuests();
+        displayFilterTable();
+      }
+
+      // Initialize Page
+      async function initPage() {
+        const studentId = localStorage.getItem("studentId");
+        const firstName = localStorage.getItem("studentFirstName");
+        if (!studentId || !firstName) {
+          document.getElementById("questsGrid").innerHTML = `
+            <div class="quest-card p-8 rounded-xl flex flex-col items-center justify-center min-w-[320px] mb-4 mr-4" style="min-height:120px;">
+                <div class="quest-icon mb-3">
+                    <i class="fas fa-exclamation-circle text-red-500 text-3xl"></i>
+                </div>
+                <div class="quest-title text-center">Please log in</div>
+                <div class="quest-meta text-center">Sign in to view your quests</div>
+                <a href="index.html" class="mt-4 inline-block bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 btn-animated">Go to Login</a>
+            </div>
+          `;
+          return;
+        }
+
+        document.getElementById("questGreeting").textContent =
+          getRandomGreeting(firstName);
+
+        // Fetch quests
+        await fetchQuests(studentId);
+
+        // Set up filter buttons
+        document.querySelectorAll(".filter-btn").forEach((button) => {
+          button.addEventListener("click", () => {
+            document.querySelectorAll(".filter-btn").forEach((btn) => {
+              btn.classList.remove("bg-yellow-500", "text-black");
+              btn.classList.add(
+                "glassmorphism-dark",
+                "border",
+                "border-transparent",
+                "text-yellow-500"
+              );
+            });
+            button.classList.remove(
+              "glassmorphism-dark",
+              "border",
+              "border-transparent",
+              "text-yellow-500"
+            );
+            button.classList.add("bg-yellow-500", "text-black");
+            applyFilters();
+          });
+        });
+
+        // Set "All Quests" as default active filter
+        document.getElementById("filter-all").click();
+
+        // Quest details modal controls
+        document
+          .getElementById("closeQuestDetailsModal")
+          .addEventListener("click", () => {
+            document
+              .getElementById("questDetailsModal")
+              .classList.add("hidden");
+          });
+        document
+          .getElementById("questModalClose")
+          .addEventListener("click", () => {
+            document
+              .getElementById("questDetailsModal")
+              .classList.add("hidden");
+          });
+
+        // Close modal when clicking outside
+        document
+          .getElementById("questDetailsModal")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "questDetailsModal") {
+              document
+                .getElementById("questDetailsModal")
+                .classList.add("hidden");
+            }
+          });
+      }
+
+      // Check if user is logged in
+      document.addEventListener("DOMContentLoaded", () => {
+        const firstName = localStorage.getItem("studentFirstName");
+        if (!firstName) {
+          window.location.href = "index.html";
+        } else {
+          initPage();
+        }
+      });
+    </script>
+  </body>
+</html>

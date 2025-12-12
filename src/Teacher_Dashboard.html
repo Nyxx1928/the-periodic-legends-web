@@ -1,0 +1,1494 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | TPL</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="/config.local.js"></script>
+    <style>
+        /* ----- BAR-CHART LOOK` ----- */
+        .chart-container {
+            position:relative;
+            width:100%;
+            height:auto;
+            min-height:300px;
+            max-height:400px;
+        }
+        @media (max-width:768px){
+            .chart-container{min-height:220px;max-height:280px}
+        }
+        @media (max-width:480px){
+            .chart-container{min-height:200px;max-height:250px}
+        }
+        canvas{
+            width:100%!important;
+            height:100%!important
+        }
+        /* make the bars a little thinner & add a subtle shadow */
+        .bar-thin {
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .glassmorphism-dark {
+            background: rgba(30, 32, 34, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(60, 60, 60, 0.18);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+            transition: all 0.3s ease-in-out;
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            transition: all 0.3s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 300px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                min-height: 250px;
+                max-height: 300px;
+            }
+            .chart-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        /* Leaderboard Specific Styling */
+.leaderboard-card {
+    background: rgba(60, 60, 60, 0.85); /* Lightened from rgba(30, 32, 34, 0.9) */
+    border-radius: 12px;
+    padding: 1.5rem; /* Increased padding for better spacing */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border for noticeability */
+}
+.leaderboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(250, 204, 21, 0.25);
+    border-color: #facc15;
+}
+.leaderboard-header {
+    cursor: pointer;
+}
+.leaderboard-card .rank {
+    font-weight: 700;
+    font-size: 1.5rem; /* Slightly larger font for noticeability */
+    width: 3rem; /* Larger badge */
+    height: 3rem;
+    text-align: center;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1.25rem; /* Adjusted spacing */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+/* Rank-specific badge colors */
+.leaderboard-card.rank-1 .rank {
+    background: #facc15; /* Gold for 1st */
+    color: #000;
+}
+.leaderboard-card.rank-2 .rank {
+    background: #d1d5db; /* Silver for 2nd */
+    color: #000;
+}
+.leaderboard-card.rank-3 .rank {
+    background: #cd7f32; /* Bronze for 3rd */
+    color: #000;
+}
+.leaderboard-card.rank-4 .rank,
+.leaderboard-card.rank-5 .rank {
+    background: rgba(250, 204, 21, 0.15);
+    color: #facc15;
+}
+.leaderboard-card .score-highlight {
+    color: #facc15;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+.leaderboard-card .player-info {
+    flex: 1;
+    color: #fff;
+    font-size: 1.1rem; /* Slightly larger for readability */
+    font-weight: 500; /* Bolder for noticeability */
+}
+.leaderboard-card .toggle-details {
+    color: #facc15;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.leaderboard-card .toggle-details:hover {
+    transform: scale(1.2);
+}
+.leaderboard-card .score-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    background: rgba(40, 40, 40, 0.9); /* Lightened from rgba(20, 22, 24, 0.95) */
+    padding: 0 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+.leaderboard-card .score-details.active {
+    max-height: 200px;
+    padding: 1rem;
+}
+.leaderboard-card img {
+    width: 5rem; /* Increased for desktop */
+    height: 5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+.leaderboard-card:hover img {
+    border-color: #facc15;
+}
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    /* Leaderboard Section Container */
+    .glassmorphism.p-6 {
+        padding: 1rem !important;
+    }
+    .glassmorphism-dark.p-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Leaderboard Cards */
+    .leaderboard-card {
+        padding: 1rem 0.75rem; /* Reduced padding for mobile */
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Rank Badge - Smaller on mobile */
+    .leaderboard-card .rank {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1rem;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+    
+    /* Avatar - Smaller on mobile */
+    .leaderboard-card img {
+        width: 2.75rem;
+        height: 2.75rem;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+    
+    /* Header Layout - Better mobile arrangement */
+    .leaderboard-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+    
+    /* Player Info - Better text sizing and layout */
+    .leaderboard-card .player-info {
+        flex: 1;
+        min-width: 0; /* Allow shrinking */
+        font-size: 0.9rem;
+        overflow: hidden;
+    }
+    
+    .leaderboard-card .player-info .font-medium {
+        font-size: 0.95rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.25rem;
+    }
+    
+    .leaderboard-card .score-highlight {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    
+    /* Toggle Button - Better sizing */
+    .leaderboard-card .toggle-details {
+        margin-left: auto;
+        flex-shrink: 0;
+        padding: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Score Details - Stack vertically on mobile */
+    .leaderboard-card .score-details {
+        padding: 0 0.75rem;
+    }
+    
+    .leaderboard-card .score-details.active {
+        max-height: 400px;
+        padding: 0.75rem;
+    }
+    
+    .leaderboard-card .score-details .grid {
+        grid-template-columns: 1fr !important; /* Single column on mobile */
+        gap: 0.75rem !important;
+    }
+    
+    .leaderboard-card .score-details p {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+    
+    /* Leaderboard List Spacing */
+    #leaderboardList {
+        gap: 0.75rem;
+    }
+    
+    #leaderboardList.space-y-6 > * + * {
+        margin-top: 0.75rem;
+    }
+    
+    /* Filter Section - Better mobile layout */
+    .flex.flex-wrap.gap-4 {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem !important;
+    }
+    
+    .flex-1.min-w-\[150px\] {
+        width: 100%;
+        min-width: unset !important;
+    }
+    
+    /* Leaderboard Title */
+    .text-2xl.font-bold {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+}
+        /* Existing styles unchanged */
+        .glassmorphism-dark {
+          background: rgba(30, 32, 34, 0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(60, 60, 60, 0.18);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+          transition: all 0.3s ease-in-out;
+        }
+        .glassmorphism {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+          transition: all 0.3s ease-in-out;
+        }
+        .progress-bar {
+          height: 8px;
+          border-radius: 4px;
+          background-color: rgba(255, 255, 255, 0.1);
+          overflow: hidden;
+        }
+        .progress-fill {
+          height: 100%;
+          border-radius: 4px;
+          background: linear-gradient(90deg, #f59e0b, #fcd34d);
+          transition: width 0.5s ease-out;
+        }
+        .score-details {
+          transition: all 0.3s ease;
+          max-height: 0;
+          overflow: hidden;
+        }
+        .score-details.active {
+          max-height: 500px;
+          padding: 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .quest-card {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+          transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .quest-card:hover {
+          box-shadow: 0 8px 24px rgba(250, 204, 21, 0.15);
+          transform: translateY(-2px) scale(1.01);
+          border-color: #facc15;
+        }
+        .quest-icon {
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.15) 60%,
+            #facc15 100%
+          );
+          border-radius: 0.75rem;
+          width: 3.5rem;
+          height: 3.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 1.25rem;
+        }
+        .quest-title {
+          font-size: 1.15rem;
+          font-weight: 600;
+          color: #fff;
+          margin-bottom: 0.25rem;
+        }
+        .quest-meta {
+          font-size: 0.95rem;
+          color: #d1d5db;
+          margin-bottom: 0.15rem;
+        }
+        .quest-status {
+          font-size: 0.95rem;
+          font-weight: 500;
+          margin-bottom: 0.15rem;
+        }
+        .quest-date {
+          font-size: 0.85rem;
+          color: #a3a3a3;
+        }
+        /* Leaderboard Table Styling */
+        .leaderboard-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .leaderboard-table th,
+        .leaderboard-table td {
+          padding: 0.75rem;
+          text-align: left;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .leaderboard-table th {
+          font-weight: 600;
+          color: #d1d5db;
+          font-size: 0.9rem;
+        }
+        .leaderboard-table td {
+          color: #fff;
+          font-size: 0.85rem;
+        }
+        .leaderboard-table tr:hover {
+          background: rgba(255, 255, 255, 0.05);
+          transform: scale(1.01);
+          transition: all 0.2s ease;
+        }
+        .leaderboard-table .rank {
+          font-weight: bold;
+          color: #facc15;
+          width: 8%;
+        }
+        .leaderboard-table.streamlined .name {
+          width: 25%;
+        }
+        .leaderboard-table.streamlined .grade,
+        .leaderboard-table.streamlined .section,
+        .leaderboard-table.streamlined .quizzes-taken {
+          width: 15%;
+        }
+        .leaderboard-table.streamlined .total-questions {
+          width: 15%;
+        }
+        .leaderboard-table.streamlined .total-score,
+        .leaderboard-table.streamlined .accuracy,
+        .leaderboard-table.streamlined .best-time,
+        .leaderboard-table.streamlined .total-time,
+        .leaderboard-table.streamlined .average-time,
+        .leaderboard-table.streamlined .ranking-score {
+          width: 15%;
+        }
+        /* Specific adjustments for overall view (no total-questions column) */
+        .leaderboard-table.streamlined.overall .name {
+          width: 30%;
+        }
+        .leaderboard-table.streamlined.overall .grade,
+        .leaderboard-table.streamlined.overall .section,
+        .leaderboard-table.streamlined.overall .quizzes-taken,
+        .leaderboard-table.streamlined.overall .ranking-score {
+          width: 17.5%;
+        }
+        @media (max-width: 640px) {
+          .leaderboard-table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+          }
+          .leaderboard-table th,
+          .leaderboard-table td {
+            min-width: 100px;
+          }
+          .leaderboard-table.streamlined th,
+          .leaderboard-table.streamlined td {
+            min-width: 80px;
+          }
+          #studentQuestsContainer {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+          }
+        }
+        @media (max-width: 640px) {
+          select {
+            max-width: 100% !important;
+            width: 100% !important;
+            min-width: unset !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+          .glassmorphism select,
+          #quizFilter,
+          #dateFilter,
+          #leaderboardFilter,
+          #sectionFilter {
+            max-width: calc(100vw - 4rem) !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .flex.flex-wrap.gap-4 {
+            overflow-x: hidden !important;
+            padding-right: 1rem;
+          }
+          .flex.flex-wrap > div {
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 1rem;
+          }
+          #leaderboardFilter,
+          #sectionFilter {
+            width: 100% !important;
+            max-width: none !important;
+          }
+        }
+        @media (max-width: 480px) {
+          select option {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .flex.items-end > button {
+            flex-shrink: 0;
+            white-space: nowrap;
+            padding: 0.5rem 1rem;
+          }
+        }
+        select {
+          box-sizing: border-box;
+        }
+        select:focus {
+          outline: none;
+        }
+        /* Mobile Optimizations */
+        @media (max-width: 640px) {
+          /* Main content spacing */
+          main {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            margin-top: 5rem !important;
+          }
+          /* Title adjustments */
+          h1 {
+            font-size: 1.75rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+          /* Greeting text */
+          #teacherGreeting {
+            font-size: 1rem !important;
+            margin-bottom: 1.5rem !important;
+          }
+          /* Stat cards - better mobile layout */
+          #studentCountCard,
+          #scoreCard,
+          #questCard {
+            padding: 1rem !important;
+            flex-direction: row !important;
+            align-items: center !important;
+          }
+          #studentCountCard i,
+          #scoreCard i,
+          #questCard i {
+            font-size: 1.5rem !important;
+            margin-right: 0.75rem !important;
+          }
+          #studentCountCard h2,
+          #scoreCard h2,
+          #questCard h2 {
+            font-size: 0.95rem !important;
+            margin-bottom: 0.25rem !important;
+          }
+          #studentCountCard .text-2xl,
+          #scoreCard .text-2xl,
+          #questCard .text-2xl {
+            font-size: 1.5rem !important;
+            line-height: 1.2 !important;
+          }
+          #studentCountCard .text-sm,
+          #scoreCard .text-sm,
+          #questCard .text-sm {
+            font-size: 0.75rem !important;
+          }
+          /* Analytics section */
+          .glassmorphism.p-4 {
+            padding: 1rem !important;
+            margin-bottom: 1.5rem !important;
+          }
+          .glassmorphism h2 {
+            font-size: 1.125rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .glassmorphism-dark h3 {
+            font-size: 0.875rem !important;
+            margin-bottom: 0.75rem !important;
+          }
+          /* Leaderboard section */
+          .glassmorphism.p-6 {
+            padding: 1rem !important;
+            margin-bottom: 2rem !important;
+          }
+          .glassmorphism h2.text-2xl {
+            font-size: 1.25rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .glassmorphism-dark.p-6 {
+            padding: 1rem !important;
+          }
+          /* Filter labels */
+          label {
+            font-size: 0.75rem !important;
+            margin-bottom: 0.5rem !important;
+          }
+          /* Modal improvements */
+          #signOutModal .glassmorphism {
+            width: calc(100vw - 2rem) !important;
+            max-width: 20rem !important;
+            padding: 1.5rem !important;
+          }
+          #signOutModal h2 {
+            font-size: 1.125rem !important;
+          }
+          #signOutModal p {
+            font-size: 0.875rem !important;
+          }
+          #signOutModal button {
+            font-size: 0.875rem !important;
+            padding: 0.625rem 1rem !important;
+          }
+        }
+        @media (max-width: 480px) {
+          /* Extra small devices */
+          main {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+          }
+          h1 {
+            font-size: 1.5rem !important;
+          }
+          #teacherGreeting {
+            font-size: 0.9375rem !important;
+          }
+          /* Leaderboard cards for extra small screens */
+          .leaderboard-card {
+            padding: 0.875rem 0.625rem;
+          }
+          .leaderboard-card .rank {
+            width: 2rem;
+            height: 2rem;
+            font-size: 0.9rem;
+            margin-right: 0.375rem;
+          }
+          .leaderboard-card img {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-right: 0.375rem;
+          }
+          .leaderboard-card .player-info {
+            font-size: 0.85rem;
+          }
+          .leaderboard-card .player-info .font-medium {
+            font-size: 0.9rem;
+          }
+          .leaderboard-card .score-highlight {
+            font-size: 0.875rem;
+          }
+          .leaderboard-card .score-details.active {
+            max-height: 450px;
+            padding: 0.625rem;
+          }
+          .leaderboard-card .score-details p {
+            font-size: 0.8rem;
+            margin-bottom: 0.375rem;
+          }
+        }
+        /* Touch-friendly improvements */
+        @media (max-width: 640px) {
+          button,
+          select,
+          .toggle-details {
+            min-height: 44px !important;
+            min-width: 44px !important;
+          }
+          .leaderboard-header {
+            cursor: pointer;
+            -webkit-tap-highlight-color: rgba(250, 204, 21, 0.2);
+          }
+        }
+    </style>
+</head>
+<body class="bg-black text-white" style="font-family: 'Inter', sans-serif;" data-aos-easing="ease-out-cubic" data-aos-duration="1000">
+<!-- Header with Glassmorphism (Desktop Navbar) -->
+<!-- HEADER & MODAL -->
+<header id="navbar" class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50" data-aos="fade-down">
+    <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="Teacher_Dashboard.html" class="flex items-center">
+            <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10">
+            <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+            <a href="Teacher_Dashboard.html" class="text-yellow-300">Dashboard</a>
+            <a href="Teacher_Quiz.html" class="hover:text-yellow-300">Quizzes</a>
+            <a href="Teacher_Quest.html" class="hover:text-yellow-300">Quests</a>
+            <a href="Teacher_Scores.html" class="hover:text-yellow-300">Scores</a>
+            <a href="Teacher_Tracking.html" class="hover:text-yellow-300">Tracking</a>
+            <a href="Teacher_Resources.html" class="hover:text-yellow-300">Resources</a>
+        </nav>
+    </div>
+    <div class="hidden md:flex space-x-4">
+        <button id="sign-out-btn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">
+            Sign Out
+        </button>
+    </div>
+    <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+    <button id="menu-close" class="text-white text-2xl self-end">
+        <i class="fas fa-times"></i>
+    </button>
+    <nav class="flex flex-col space-y-4">
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition" href="Teacher_Dashboard.html">Dashboard</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Quiz.html">Quizzes</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Quest.html">Quests</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Scores.html">Scores</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Tracking.html">Tracking</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Resources.html">Resources</a>
+    </nav>
+    <div class="flex justify-center">
+        <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign Out</button>
+    </div>
+</div>
+<!-- Sign Out Modal -->
+<div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+    <div class="glassmorphism text-white p-8 rounded-lg w-80 shadow-lg relative">
+        <button id="closeSignOutModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">&times;</button>
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6">Are you sure you want to sign out?</p>
+        <div class="flex justify-between">
+            <button id="confirmSignOut" class="w-full bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black mr-2">Yes</button>
+            <button id="cancelSignOut" class="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 ml-2">Cancel</button>
+        </div>
+    </div>
+</div>
+<!-- Main Content -->
+<main class="px-4 sm:px-6 md:px-48 mt-20 md:mt-28">
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4" data-aos="fade-right">Teacher
+        <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">
+            Dashboard
+        </span>
+    </h1>
+    <p id="teacherGreeting" class="text-base sm:text-xl md:text-2xl mb-6 md:mb-8 text-gray-300" data-aos="fade-right" data-aos-delay="100">Welcome!</p>
+    <div class="space-y-3 md:space-y-4 mb-8 md:mb-12">
+        <div id="studentCountCard" class="glassmorphism p-4 rounded flex items-center space-x-4" data-aos="fade-up" data-aos-delay="100">
+            <i class="fas fa-users text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Total Students</h2>
+                <p class="text-2xl">Loading...</p>
+                <p class="text-sm text-gray-400">Active students</p>
+            </div>
+        </div>
+        <div id="scoreCard" class="glassmorphism p-4 rounded flex items-center space-x-4" data-aos="fade-up" data-aos-delay="200">
+            <i class="fas fa-chart-line text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Average Score</h2>
+                <p class="text-2xl">Loading...</p>
+                <p class="text-sm text-gray-400">Based on recent quizzes</p>
+            </div>
+        </div>
+        <div id="questCard" class="glassmorphism p-4 rounded flex items-center space-x-4" data-aos="fade-up" data-aos-delay="300">
+            <i class="fas fa-tasks text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Quizzes Completed</h2>
+                <p class="text-2xl">Loading...</p>
+                <p class="text-sm text-gray-400">Total quiz submissions</p>
+            </div>
+        </div>
+    </div>
+    <div class="glassmorphism p-4 md:p-6 rounded-lg mb-6 md:mb-8" data-aos="fade-up">
+        <h2 class="text-lg md:text-xl font-semibold mb-3 md:mb-4">Performance Analytics</h2>
+        <div class="chart-section grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+            <div class="glassmorphism-dark p-3 md:p-4 rounded-lg">
+                <h3 class="text-gray-200 mb-2">Completion by Section (Comparative)</h3>
+                <div class="chart-container">
+                    <canvas id="questProgressChart"></canvas>
+                </div>
+            </div>
+            <div class="glassmorphism-dark p-3 md:p-4 rounded-lg">
+                <h3 class="text-gray-200 mb-2">Avg. Score per Quiz (Class)</h3>
+                <div class="chart-container">
+                    <canvas id="quizPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Leaderboard Section -->
+    <div class="glassmorphism p-4 md:p-6 rounded-lg mb-20 md:mb-40 w-full shadow-lg" data-aos="fade-up" data-aos-delay="200"> <!-- Added soft shadow for noticeability -->
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+            <i class="fas fa-trophy text-yellow-400 mr-2"></i> Class Leaderboard
+        </h2>
+        <div class="glassmorphism-dark p-4 md:p-6 rounded-lg">
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-3 md:gap-4 mb-4 md:mb-6 items-center">
+            <div class="flex-1 min-w-[150px]">
+              <label for="leaderboardFilter" class="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
+              <select id="leaderboardFilter" class="glassmorphism-dark border border-gray-600 text-white rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-yellow-400 focus:outline-none transition duration-200" aria-label="Sort leaderboard by metric">
+                <option value="ranking_score">Ranking Score</option>
+                <option value="accuracy">Accuracy</option>
+                <option value="best_time">Best Time</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label for="sectionFilter" class="block text-sm font-medium text-gray-300 mb-2">Section</label>
+              <select id="sectionFilter" class="glassmorphism-dark border border-gray-600 text-white rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-yellow-400 focus:outline-none transition duration-200" aria-label="Filter leaderboard by section">
+                <option value="">All Sections</option>
+              </select>
+            </div>
+            <div class="flex-1 min-w-[150px]">
+              <label for="gradeFilter" class="block text-sm font-medium text-gray-300 mb-2">Grade Level</label>
+              <select id="gradeFilter" class="glassmorphism-dark border border-gray-600 text-white rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-yellow-400 focus:outline-none transition duration-200" aria-label="Filter leaderboard by grade level">
+                <option value="">All Grades</option>
+              </select>
+            </div>
+          </div>
+          <!-- Leaderboard Content -->
+          <div id="leaderboardList" class="space-y-4 md:space-y-6"> <!-- Increased space-y for better separation -->
+            <!-- All ranks (1-5) populated dynamically -->
+          </div>
+        </div>
+      </div>
+</main>
+<script>
+// Initialize Supabase Client
+const supabase = window.supabase.createClient(
+    'https://kckasgowvaguzkdlpdyw.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+);
+console.log("Supabase initialized:", supabase);
+AOS.init({
+    duration: 1200,
+    once: false,
+    easing: 'ease-in-out',
+});
+// Transparent navbar on scroll
+window.addEventListener('scroll', function () {
+    const navbar = document.getElementById('navbar');
+    navbar.style.opacity = window.scrollY > 50 ? '0.7' : '1';
+});
+// Mobile menu toggle
+document.getElementById('menu-toggle').addEventListener('click', function () {
+    document.getElementById('mobile-menu').classList.remove('translate-x-full');
+});
+document.getElementById('menu-close').addEventListener('click', function () {
+    document.getElementById('mobile-menu').classList.add('translate-x-full');
+});
+// Sign Out Functionality
+document.addEventListener("DOMContentLoaded", function () {
+    const signOutModal = document.getElementById('signOutModal');
+    const closeSignOutModal = document.getElementById('closeSignOutModal');
+    const cancelSignOut = document.getElementById('cancelSignOut');
+    const confirmSignOut = document.getElementById('confirmSignOut');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    const openSignOutModal = document.getElementById('openSignOutModal');
+    signOutBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        signOutModal.classList.remove('hidden');
+    });
+    openSignOutModal.addEventListener('click', function (event) {
+        event.preventDefault();
+        signOutModal.classList.remove('hidden');
+        document.getElementById('mobile-menu').classList.add('translate-x-full');
+    });
+    closeSignOutModal.addEventListener('click', function () {
+        signOutModal.classList.add('hidden');
+    });
+    cancelSignOut.addEventListener('click', function () {
+        signOutModal.classList.add('hidden');
+    });
+    confirmSignOut.addEventListener('click', function () {
+        localStorage.removeItem('teacherFirstName');
+        localStorage.removeItem('teacherId');
+        window.location.href = 'index.html';
+    });
+});
+// Display teacher's first name
+function updateTeacherGreeting() {
+    const teacherFirstName = localStorage.getItem('teacherFirstName');
+    const greetingElement = document.getElementById('teacherGreeting');
+    greetingElement.textContent = teacherFirstName ? `Welcome, ${teacherFirstName}!` : 'Welcome, Teacher!';
+}
+// Fetch total students
+async function fetchTotalStudents() {
+    const studentCard = document.getElementById('studentCountCard');
+    studentCard.innerHTML = `
+        <i class="fas fa-users text-2xl"></i>
+        <div>
+            <h2 class="text-xl">Total Students</h2>
+            <p class="text-gray-400">Heads-up: If you're seeing this message, it means we're having trouble loading external resources on our website. If you're behind a web filter, please make sure that the domains *.kastatic.org and *.kasandbox.org are unblocked.
+        </div>
+    `;
+    try {
+        const { count, error } = await supabase
+            .from('student')
+            .select('*', { count: 'exact', head: true });
+        if (error) throw error;
+        studentCard.innerHTML = `
+            <i class="fas fa-users text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Total Students</h2>
+                <p class="text-2xl">${count}</p>
+                <p class="text-sm text-yellow-300">Active students</p>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error fetching total students:', error);
+        studentCard.innerHTML = `
+            <i class="fas fa-users text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Total Students</h2>
+                <p class="text-red-500">Error loading count</p>
+            </div>
+        `;
+    }
+}
+// Fetch average score
+async function fetchAverageScore() {
+    const scoreCard = document.getElementById('scoreCard');
+    scoreCard.innerHTML = `
+        <i class="fas fa-chart-line text-2xl"></i>
+        <div>
+            <h2 class="text-xl">Average Score</h2>
+            <p class="text-gray-400">Loading...</p>
+        </div>
+    `;
+    try {
+        const { data, error } = await supabase
+            .from('student_quiz_results')
+            .select('score, total_questions');
+        if (error) throw error;
+        const averages = data.map(item => (item.score / item.total_questions) * 100);
+        const average = averages.length ? (averages.reduce((sum, avg) => sum + avg, 0) / averages.length).toFixed(0) : 0;
+        scoreCard.innerHTML = `
+            <i class="fas fa-chart-line text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Average Score</h2>
+                <p class="text-2xl">${average}%</p>
+                <p class="text-sm text-yellow-300">Based on recent quizzes</p>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error fetching average score:', error);
+        scoreCard.innerHTML = `
+            <i class="fas fa-chart-line text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Average Score</h2>
+                <p class="text-red-500">Error loading data</p>
+            </div>
+        `;
+    }
+}
+// Fetch quizzes completed (as quests)
+async function fetchQuizzesCompleted() {
+    const questCard = document.getElementById('questCard');
+    questCard.innerHTML = `
+        <i class="fas fa-tasks text-2xl"></i>
+        <div>
+            <h2 class="text-xl">Quizzes Completed</h2>
+            <p class="text-gray-400">Loading...</p>
+        </div>
+    `;
+    try {
+        const { count, error } = await supabase
+            .from('student_quiz_results')
+            .select('*', { count: 'exact', head: true });
+        if (error) throw error;
+        questCard.innerHTML = `
+            <i class="fas fa-tasks text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Quizzes Completed</h2>
+                <p class="text-2xl">${count}</p>
+                <p class="text-sm text-yellow-300">Total quiz submissions</p>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error fetching quizzes completed:', error);
+        questCard.innerHTML = `
+            <i class="fas fa-tasks text-2xl"></i>
+            <div>
+                <h2 class="text-xl">Quizzes Completed</h2>
+                <p class="text-red-500">Error loading count</p>
+            </div>
+        `;
+    }
+}
+// Chart instances to destroy before re-rendering
+let questProgressChartInstance = null;
+let quizPerformanceChartInstance = null;
+// === UPDATED: Comparative Bar Chart (Grade + Section) ===
+// === FIXED: Comparative Bar Chart (Grade + Section) ===
+async function fetchQuestProgress() {
+  const canvas = document.getElementById('questProgressChart');
+  const ctx    = canvas.getContext('2d');
+  if (questProgressChartInstance) questProgressChartInstance.destroy();
+  try {
+    // ---- active quizzes count -------------------------------------------------
+    const { count: totalQuizzes, error: quizError } = await supabase
+      .from('quizzes')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true);
+    if (quizError) throw quizError;
+    if (totalQuizzes === 0) {
+      ctx.fillStyle = '#fff';
+      ctx.font = '16px Inter';
+      ctx.fillText('No active quizzes', 10, 50);
+      return;
+    }
+    // ---- student results -------------------------------------------------------
+    const { data: results, error } = await supabase
+      .from('student_quiz_results')
+      .select('student_id, quiz_id');
+    if (error) throw error;
+    const studentIds = [...new Set(results.map(r => r.student_id))];
+    const { data: students, error: sErr } = await supabase
+      .from('student')
+      .select('student_id, grade_level, section')
+      .in('student_id', studentIds);
+    if (sErr) throw sErr;
+    // ---- only active quizzes ---------------------------------------------------
+    const activeIds = await supabase
+      .from('quizzes')
+      .select('id')
+      .eq('is_active', true)
+      .then(r => r.data.map(q => q.id));
+    const quizCounts = {};
+    results.forEach(r => {
+      if (activeIds.includes(r.quiz_id))
+        quizCounts[r.student_id] = (quizCounts[r.student_id] || 0) + 1;
+    });
+    // ---- group by grade-section ------------------------------------------------
+    const groups = {};
+    students.forEach(s => {
+      const sec = s.section?.trim().toLowerCase();
+      if (!sec || !['gas1','gas2'].includes(sec)) return;
+      const key = `${s.grade_level}-${sec}`;
+      groups[key] = groups[key] || { students:0, completed:0 };
+      groups[key].students++;
+      groups[key].completed += quizCounts[s.student_id] || 0;
+    });
+    // ---- build chart data ------------------------------------------------------
+    const labels = [], data = [];
+    ['11-gas1','12-gas2','12-gas1'].forEach(k => {
+      const [g,s] = k.split('-');
+      const gData = groups[k] || {students:0,completed:0};
+      const pct   = gData.students ? (gData.completed/gData.students/totalQuizzes*100).toFixed(1) : 0;
+      labels.push(`G${g} ${s.toUpperCase()}`);
+      data.push(Math.min(100, pct));
+    });
+    questProgressChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Avg. Completion (%)',
+          data,
+          backgroundColor: [
+            'rgba(255,206,86,0.85)',   // G11-GAS1
+            'rgba(255,159,64,0.85)',   // G12-GAS2
+            'rgba(75,192,192,0.85)'    // G12-GAS1
+          ],
+          borderColor: '#fff',
+          borderWidth: 1.5,
+          borderRadius: 4,               // <-- rounded corners
+          barThickness: 30,              // <-- thinner bars
+          categoryPercentage: 0.6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: { 
+            display:true, 
+            text:'Quiz Completion by Section', 
+            color:'#fff', 
+            font:{size:window.innerWidth <= 640 ? 12 : 16,weight:'bold'} 
+          },
+          legend: { display:false },
+          tooltip: { 
+            callbacks: { label: ctx => `${ctx.raw}%` },
+            titleFont: { size: window.innerWidth <= 640 ? 12 : 14 },
+            bodyFont: { size: window.innerWidth <= 640 ? 11 : 13 }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero:true, 
+            max:100, 
+            title:{
+              display:true,
+              text:'Completion %',
+              color:'#e0e0e0',
+              font: { size: window.innerWidth <= 640 ? 10 : 12 }
+            },
+            ticks:{
+              color:'#e0e0e0',
+              font: { size: window.innerWidth <= 640 ? 10 : 12 }
+            }, 
+            grid:{color:'rgba(255,255,255,0.1)'} 
+          },
+          x: { 
+            ticks:{
+              color:'#e0e0e0',
+              font:{size:window.innerWidth <= 640 ? 10 : 12}
+            }, 
+            grid:{display:false} 
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Bar chart error:', e);
+    ctx.fillStyle = '#ff5555';
+    ctx.font = '16px Inter';
+    ctx.fillText('Error loading data',10,50);
+  }
+}
+// === UPDATED: Line Chart - Average Score per Quiz (Max 5) ===
+// === FIXED: Line Chart - Average Score per Quiz (Max 5) ===
+async function fetchQuizPerformance() {
+  const canvas = document.getElementById('quizPerformanceChart');
+  const ctx    = canvas.getContext('2d');
+  if (quizPerformanceChartInstance) quizPerformanceChartInstance.destroy();
+  try {
+    // ---- get the 5 most recent ACTIVE quizzes (id + title) -----------------
+    const { data: quizzes, error: qErr } = await supabase
+      .from('quizzes')
+      .select('id, title')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .limit(5);
+    if (qErr) throw qErr;
+    if (!quizzes?.length) throw new Error('No active quizzes');
+    const quizIds   = quizzes.map(q => q.id);
+    // ---- build simple labels: Quiz 1, Quiz 2 … ---------------------------
+    const quizLabels = quizzes.map((_,i) => `Quiz ${i+1}`);
+    // ---- fetch results ----------------------------------------------------
+    const { data: results, error } = await supabase
+      .from('student_quiz_results')
+      .select('quiz_id, score, total_questions')
+      .in('quiz_id', quizIds);
+    if (error) throw error;
+    // ---- aggregate averages ------------------------------------------------
+    const map = {};
+    results.forEach(r => {
+      if (!map[r.quiz_id]) map[r.quiz_id] = {sum:0, cnt:0};
+      const pct = (r.score / r.total_questions) * 100;
+      map[r.quiz_id].sum += pct;
+      map[r.quiz_id].cnt++;
+    });
+    const averages = quizIds.map(id => {
+      const s = map[id] || {sum:0,cnt:0};
+      return s.cnt ? (s.sum / s.cnt).toFixed(1) : null;   // null = no interaction
+    });
+    // ---- hide points that have no data ------------------------------------
+    const pointRadii = averages.map(v => v === null ? 0 : 6);
+    const pointHover = averages.map(v => v === null ? 0 : 9);
+    quizPerformanceChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: quizLabels,
+        datasets: [{
+          label: 'Class Avg (%)',
+          data: averages,                     // null values become gaps
+          borderColor: 'rgba(255,206,86,1)',
+          backgroundColor: 'rgba(255,206,86,0.2)',
+          borderWidth: 3,
+          pointRadius: pointRadii,
+          pointHoverRadius: pointHover,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgba(255,206,86,1)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: { 
+            display:true, 
+            text:'Average Score per Quiz (Class-Wide)', 
+            color:'#fff', 
+            font:{size:window.innerWidth <= 640 ? 12 : 16,weight:'bold'} 
+          },
+          legend: { 
+            labels:{
+              color:'#fff',
+              font:{size:window.innerWidth <= 640 ? 11 : 14}
+            } 
+          },
+          tooltip: { 
+            enabled: true, 
+            callbacks:{ label: c => c.raw===null ? 'No data' : `${c.raw}%` },
+            titleFont: { size: window.innerWidth <= 640 ? 12 : 14 },
+            bodyFont: { size: window.innerWidth <= 640 ? 11 : 13 }
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero:true, 
+            max:100, 
+            title:{
+              display:true,
+              text:'Score %',
+              color:'#e0e0e0',
+              font: { size: window.innerWidth <= 640 ? 10 : 12 }
+            },
+            ticks:{
+              color:'#e0e0e0',
+              font: { size: window.innerWidth <= 640 ? 10 : 12 }
+            }, 
+            grid:{color:'rgba(255,255,255,0.1)'} 
+          },
+          x: { 
+            ticks:{
+              color:'#e0e0e0',
+              font:{size:window.innerWidth <= 640 ? 10 : 12}
+            }, 
+            grid:{display:false} 
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.error('Line chart error:', e);
+    ctx.fillStyle = '#ff5555';
+    ctx.font = '16px Inter';
+    ctx.fillText('Error loading data',10,50);
+  }
+}
+// Format seconds to MM:SS
+function formatTime(seconds) {
+  if (seconds === null || seconds === undefined || isNaN(seconds) || seconds < 0) {
+    return "No Time Recorded";
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60; // int4 ensures integer values
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+}
+// Character class to GIF mapping
+const classImages = {
+  'Pyromancer': 'Assets/pyro_idle.gif',
+  'Hunter': 'Assets/Archer_idle.gif',
+  'Warrior': 'Assets/Glad_idle.gif'
+};
+function getCharacterGif(studentId) {
+  return new Promise((resolve) => {
+    supabase
+      .from('characters')
+      .select('character_class')
+      .eq('student_id', studentId)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) {
+          resolve('https://via.placeholder.com/200x200/808080/000000?text=No+Character');
+        } else {
+          resolve(classImages[data.character_class] || 'https://via.placeholder.com/200x200/808080/000000?text=No+Character');
+        }
+      });
+  });
+}
+// Fetch leaderboard data
+async function fetchLeaderboard(filterType = "ranking_score") {
+  try {
+    document.getElementById("leaderboardList").innerHTML = `
+      <div class="text-center py-8 text-gray-400">
+        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+        <p>Loading leaderboard...</p>
+      </div>
+    `;
+    let query = supabase
+      .from("student_leaderboard")
+      .select(
+        "student_id, full_name, grade_level, section, total_score, quizzes_taken, average_score, best_completion_time, total_questions, total_time, accuracy, average_time, ranking_score"
+      );
+    switch (filterType) {
+      case "accuracy":
+        query = query.order("accuracy", { ascending: false });
+        break;
+      case "best_time":
+        query = query
+          .order("best_completion_time", { ascending: true, nullsLast: true })
+          .not("best_completion_time", "is", null)
+          .gte("best_completion_time", 0); // Ensure non-negative for int4
+        break;
+      default:
+        query = query.order("ranking_score", { ascending: false });
+        break;
+    }
+    const sectionFilter = document.getElementById("sectionFilter").value;
+    if (sectionFilter) {
+      query = query.ilike("section", sectionFilter); // Case-insensitive filtering
+    }
+    const gradeFilter = document.getElementById("gradeFilter").value;
+    if (gradeFilter) {
+      query = query.eq("grade_level", gradeFilter);
+    }
+    query = query.limit(5); // Show top 5
+    const { data, error } = await query;
+    if (error) throw error;
+    const leaderboardList = document.getElementById("leaderboardList");
+    if (!data || data.length === 0) {
+      leaderboardList.innerHTML = `
+        <div class="text-center py-8 text-gray-400">
+          <i class="fas fa-trophy text-2xl mb-2"></i>
+          <p>No leaderboard data available for the selected filters.</p>
+        </div>
+      `;
+      return;
+    }
+    // Fetch GIFs for all players
+    const gifPromises = data.map((entry) => getCharacterGif(entry.student_id));
+    const gifs = await Promise.all(gifPromises);
+    // Generate HTML for all ranks (1-5)
+    let leaderboardHtml = "";
+    data.forEach((entry, index) => {
+      const rank = index + 1;
+      const displayValue =
+        filterType === "best_time"
+          ? formatTime(entry.best_completion_time)
+          : filterType === "accuracy"
+          ? `${(entry.accuracy || 0).toFixed(1)}%`
+          : (entry.ranking_score || 0).toFixed(1);
+      leaderboardHtml += `
+          <div class="leaderboard-card" data-aos="fade-up" data-aos-delay="${index * 100}">
+            <div class="leaderboard-header flex items-center w-full">
+              <span class="rank">${rank}</span>
+              <img src="${gifs[index]}" alt="${entry.full_name || 'Player'}" class="rounded-full" aria-label="Player avatar for ${entry.full_name || 'Player'}">
+              <div class="player-info">
+                <div class="font-medium">${entry.full_name || "Unknown"}</div>
+                <div class="score-highlight">${displayValue}</div>
+              </div>
+              <button class="toggle-details text-yellow-500 hover:text-yellow-400" aria-label="Toggle details for ${entry.full_name || 'Player'}" aria-expanded="false">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+            <div class="score-details">
+              <div class="grid grid-cols-2 gap-4 text-sm text-gray-300">
+                <div>
+                  <p><span class="text-gray-400">Grade:</span> ${entry.grade_level || "N/A"}</p>
+                  <p><span class="text-gray-400">Section:</span> ${entry.section || "N/A"}</p>
+                </div>
+                <div>
+                  <p><span class="text-gray-400">Quizzes Taken:</span> ${entry.quizzes_taken || 0}</p>
+                  <p><span class="text-gray-400">Accuracy:</span> ${(entry.accuracy || 0).toFixed(1)}%</p>
+                  <p><span class="text-gray-400">Best Time:</span> ${formatTime(entry.best_completion_time)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+    });
+    leaderboardList.innerHTML = leaderboardHtml;
+    // Add event listeners for toggle details
+    document.querySelectorAll(".leaderboard-card .leaderboard-header").forEach((header) => {
+      header.addEventListener("click", (event) => {
+        const card = header.closest(".leaderboard-card");
+        const details = card.querySelector(".score-details");
+        const isExpanded = details.classList.toggle("active");
+        const icon = header.querySelector("i");
+        icon.classList.toggle("fa-chevron-down", !isExpanded);
+        icon.classList.toggle("fa-chevron-up", isExpanded);
+        header.querySelector(".toggle-details").setAttribute("aria-expanded", isExpanded ? "true" : "false");
+      });
+    });
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    document.getElementById("leaderboardList").innerHTML = `
+      <div class="text-center py-8 text-red-500">
+        <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+        <p>Failed to load leaderboard: ${error.message}</p>
+      </div>
+    `;
+  }
+}
+
+// Fetch sections for filter dropdown
+async function fetchSections() {
+  try {
+    const { data, error } = await supabase
+      .from("student_leaderboard")
+      .select("section")
+      .not("section", "is", null)
+      .order("section", { ascending: true });
+    if (error) throw error;
+    const sectionSelect = document.getElementById("sectionFilter");
+    sectionSelect.innerHTML = '<option value="">All Sections</option>';
+    if (data && data.length > 0) {
+      // Normalize sections to GAS1 or GAS2 (case-insensitive)
+      const normalizedSections = data
+        .map((item) => item.section?.toUpperCase())
+        .filter((section) => section === "GAS1" || section === "GAS2");
+      const uniqueSections = [...new Set(normalizedSections)];
+      uniqueSections.forEach((section) => {
+        const option = document.createElement("option");
+        option.value = section;
+        option.textContent = section; // Display as GAS1 or GAS2
+        sectionSelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching sections:", error);
+    document.getElementById("sectionFilter").innerHTML = '<option value="">All Sections</option>';
+  }
+}
+// Fetch grade levels for filter dropdown
+async function fetchGradeLevels() {
+  try {
+    const { data, error } = await supabase
+      .from("student_leaderboard")
+      .select("grade_level")
+      .not("grade_level", "is", null)
+      .order("grade_level", { ascending: true });
+    if (error) throw error;
+    const gradeSelect = document.getElementById("gradeFilter");
+    gradeSelect.innerHTML = '<option value="">All Grades</option>';
+    if (data && data.length > 0) {
+      // Get unique grade levels
+      const uniqueGrades = [...new Set(data.map(item => item.grade_level))].filter(grade => grade !== null);
+     
+      uniqueGrades.forEach(grade => {
+        const option = document.createElement("option");
+        option.value = grade;
+        option.textContent = `Grade ${grade}`;
+        gradeSelect.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching grade levels:", error);
+    document.getElementById("gradeFilter").innerHTML = '<option value="">All Grades</option>';
+  }
+}
+// Update leaderboard based on filter
+function updateLeaderboard() {
+  const filterType = document.getElementById("leaderboardFilter").value;
+  fetchLeaderboard(filterType);
+}
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    updateTeacherGreeting();
+    // Setup leaderboard filters
+    await Promise.all([
+        fetchSections(),
+        fetchGradeLevels(),
+        fetchTotalStudents(),
+        fetchAverageScore(),
+        fetchQuizzesCompleted(),
+        fetchQuestProgress(),
+        fetchQuizPerformance(),
+        fetchLeaderboard('ranking_score')
+    ]);
+    document.getElementById("leaderboardFilter").addEventListener("change", updateLeaderboard);
+    document.getElementById("sectionFilter").addEventListener("change", updateLeaderboard);
+    document.getElementById("gradeFilter").addEventListener("change", updateLeaderboard);
+});
+// === FULL SIGN-OUT + BACK BUTTON PROTECTION ===
+function logoutTeacher() {
+    // Clear all session data
+    localStorage.removeItem("teacherId");
+    localStorage.removeItem("teacherFirstName");
+ 
+    // Prevent back button by pushing a dummy state
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+    // Redirect to login
+    window.location.href = "index.html";
+}
+// Modal controls
+document.getElementById('sign-out-btn')?.addEventListener('click', () => {
+    document.getElementById('signOutModal').classList.remove('hidden');
+});
+document.getElementById('openSignOutModal')?.addEventListener('click', () => {
+    document.getElementById('signOutModal').classList.remove('hidden');
+    document.getElementById('mobile-menu').classList.add('translate-x-full');
+});
+document.getElementById('closeSignOutModal')?.addEventListener('click', () => {
+    document.getElementById('signOutModal').classList.add('hidden');
+});
+document.getElementById('cancelSignOut')?.addEventListener('click', () => {
+    document.getElementById('signOutModal').classList.add('hidden');
+});
+document.getElementById('confirmSignOut')?.addEventListener('click', logoutTeacher);
+// === PREVENT BACK BUTTON AFTER LOGOUT ===
+window.addEventListener('load', () => {
+    if (!localStorage.getItem('teacherId')) {
+        // If no session, block access
+        document.body.innerHTML = `
+            <div class="fixed inset-0 bg-black flex items-center justify-center">
+                <div class="text-center text-white">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+                    <h1 class="text-3xl font-bold">Access Denied</h1>
+                    <p class="mt-4">You are not logged in.</p>
+                    <button onclick="window.location.href='index.html'" class="mt-6 px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-400">
+                        Go to Login
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    // Push state to prevent back
+    history.pushState(null, null, location.href);
+    window.onpopstate = function () {
+        history.go(1);
+    };
+});
+</script>
+</body>
+</html>

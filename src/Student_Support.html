@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Student Help Center</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css"
+    />
+  </head>
+  <body
+    class="bg-black text-white"
+    style="font-family: 'Inter', sans-serif"
+    data-aos-easing="ease-out-cubic"
+    data-aos-duration="1000"
+  >
+    <!-- Header (Unchanged) -->
+    <header
+      id="navbar"
+      class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50"
+      data-aos="fade-down"
+    >
+      <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="Student_Dashboard.html" class="flex items-center">
+          <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10" />
+          <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+          <a href="Student_Dashboard.html" class="hover:text-yellow-300">Dashboard</a>
+                <a href="Student_Quest.html" class="hover:text-yellow-300">Quests</a>
+                <a href="Student_Quizzes.html" class="hover:text-yellow-300">Quizzes</a>
+                <a href="Student_Tracking.html" class="hover:text-yellow-300">Progress</a>
+                <a href="Student_Support.html" class="text-yellow-300">Support</a>
+        </nav>
+      </div>
+      <div class="relative hidden md:flex space-x-4">
+        <button
+          id="sign-out-btn"
+          class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black"
+        >
+          Sign Out
+        </button>
+      </div>
+      <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+      </button>
+    </header>
+
+    <!-- Mobile Menu with Glassmorphism -->
+    <div
+      id="mobile-menu"
+      class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300"
+    >
+      <button id="menu-close" class="text-white text-2 self-end">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-4">
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition"
+          href="Student_Dashboard.html"
+          >Dashboard</a
+        >
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition"
+          href="Student_Quest.html"
+          >Quests</a
+        >
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition"
+          href="Student_Quizzes.html"
+          >Quizzes</a
+        >
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:backdrop-blur-md hover:text-yellow-300 transition" href="Student_Tracking.html">Progress</a>
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition"
+          href="Student_Support.html"
+          >Support</a
+        >
+      </nav>
+      <!-- Mobile Sign Out Button -->
+      <div class="flex justify-center">
+            <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign Out</button>
+      </div>
+    </div>
+    <!-- Sign Out Modal -->
+    <div
+      id="signOutModal"
+      class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50"
+    >
+      <div
+        class="bg-[#2e3130] text-white p-8 rounded-lg w-80 shadow-lg relative"
+      >
+        <!-- Close Button (X) -->
+        <button
+          id="closeSignOutModal"
+          class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl"
+        >
+          &times;
+        </button>
+
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6">
+          Are you sure you want to sign out?
+        </p>
+
+        <div class="flex justify-between">
+          <button
+            id="confirmSignOut"
+            class="w-full bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black mr-2"
+          >
+            Yes
+          </button>
+          <button
+            id="cancelSignOut"
+            class="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 ml-2"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner Section -->
+    <section
+      class="relative bg-cover bg-center h-80 flex items-center justify-center z-10"
+      style="background-image: url('banner.jpg')"
+    >
+      <div class="absolute inset-0 bg-black bg-opacity-70"></div>
+      <div
+        class="relative z-20 text-center text-white mt-20 px-4"
+        data-aos="slide-right"
+      >
+        <h1 class="text-3xl font-semibold text-left">
+          Advice and
+          <span
+            class="bg-[linear-gradient(to_right,white_30%,#facc15_70%)] bg-clip-text text-transparent"
+          >
+            answers from the TPL Team
+          </span>
+        </h1>
+        <!-- Search Bar -->
+        <div class="mt-4 flex justify-center">
+          <div
+            class="relative w-full max-w-7xl transition-all duration-300 ease-in-out hover:scale-100 hover:shadow-2xl hover:shadow-white-500/50 rounded-3xl overflow-hidden backdrop-blur-md"
+          >
+            <input
+              type="text"
+              placeholder="Search for articles..."
+              class="w-full pl-12 pr-6 py-4 text-lg text-white bg-transparent/5 border-2 border-white rounded-3xl focus:outline-none md:pl-16 md:pr-12 md:py-6"
+            />
+            <!-- Search Icon -->
+            <i
+              class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"
+            ></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mobile Menu -->
+    <div
+      id="mobile-menu"
+      class="fixed top-0 right-0 bg-[#171918] w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300"
+    >
+      <button id="menu-close" class="text-white text-2 self-end">
+        <i class="fas fa-times"></i>
+      </button>
+      <nav class="flex flex-col space-y-4">
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-[#202221] hover:text-yellow-300 transition"
+          href="Student_Dashboard.html"
+          >Dashboard</a
+        >
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-[#202221] hover:text-yellow-300 transition"
+          href="Student_Quest.html"
+          >Quests</a
+        >
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-[#202221] hover:text-yellow-300 transition"
+          href="Student_Quizzes.html"
+          >Quizzes</a
+        >
+        <a
+          class="text-lg w-full text-left px-4 py-2 rounded-lg bg-[#202221] text-yellow-300 transition"
+          href="Student_Support.html"
+          >Support</a
+        >
+      </nav>
+      <!-- Mobile Sign Out Button -->
+      <div class="w-full flex flex-col items-center space-y-2 pt-72">
+        <button
+          id="openSignOutModal"
+          class="bg-transparent border border-yellow-500 text-yellow-500 w-1/2 px-6 py-2 rounded-lg hover:bg-yellow-500 hover:text-black transition text-center"
+        >
+          Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!--------------------------------------------------------------------------------------------------------------------------------------------->
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto mt-8 mb-96 space-y-4 px-4">
+      <!-- Article Cards -->
+      <div
+        class="group bg-black p-4 border-l-4 border border-[#202221] hover:border-yellow-500 shadow-md rounded-md transition-all duration-300 hover:shadow-yellow-500/50"
+        data-aos="fade-up"
+        data-aos-delay="200"
+      >
+        <h2
+          class="text-white group-hover:text-yellow-300 font-semibold transition-colors duration-300"
+        >
+          Get started with Superlist
+        </h2>
+        <p class="text-white">General information about Superlist</p>
+        <p class="text-sm text-gray-400">By Marcel • 9 articles</p>
+      </div>
+
+      <div
+        class="group bg-black p-4 border-l-4 border border-[#202221] hover:border-yellow-500 shadow-md rounded-md transition-all duration-300 hover:shadow-yellow-500/50"
+        data-aos="fade-up"
+        data-aos-delay="400"
+      >
+        <h2
+          class="text-white group-hover:text-yellow-300 font-semibold transition-colors duration-300"
+        >
+          Create lists and tasks
+        </h2>
+        <p class="text-white">
+          Learn how to create and organize your tasks and lists.
+        </p>
+        <p class="text-sm text-gray-400">By Marcel • 7 articles</p>
+      </div>
+
+      <div
+        class="group bg-black p-4 border-l-4 border border-[#202221] hover:border-yellow-500 shadow-md rounded-md transition-all duration-300 hover:shadow-yellow-500/50"
+        data-aos="fade-up"
+        data-aos-delay="600"
+      >
+        <h2
+          class="text-white group-hover:text-yellow-300 font-semibold transition-colors duration-300"
+        >
+          Manage your Inbox and Today view
+        </h2>
+        <p class="text-white">Tips for managing your workflow efficiently.</p>
+        <p class="text-sm text-gray-400">By Marcel • 2 articles</p>
+      </div>
+    </main>
+
+    <!-- Floating Chat Button -->
+    <button
+      class="fixed bottom-6 right-6 bg-yellow-400 text-black p-3 rounded-full shadow-lg hover:bg-yellow-600"
+    >
+      💬
+    </button>
+
+    <!----------------------------------------------------------------------------------------------------------------------------------------->
+
+    <script>
+      // Initialize AOS
+      AOS.init({
+        duration: 1200, // Slower animation
+        easing: "ease-out", // Smooth transition
+        once: true, // Runs animation only once
+      });
+
+      //Transparent nav bar on scroll
+      window.addEventListener("scroll", function () {
+        const navbar = document.getElementById("navbar");
+        if (window.scrollY > 50) {
+          navbar.style.opacity = "0.7"; // Lower opacity when scrolling
+        } else {
+          navbar.style.opacity = "1"; // Full opacity at the top
+        }
+      });
+
+      // Mobile Menu Toggle
+      document
+        .getElementById("menu-toggle")
+        .addEventListener("click", function () {
+          document
+            .getElementById("mobile-menu")
+            .classList.remove("translate-x-full");
+        });
+
+      document
+        .getElementById("menu-close")
+        .addEventListener("click", function () {
+          document
+            .getElementById("mobile-menu")
+            .classList.add("translate-x-full");
+        });
+
+      // Sign Out Functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const signOutModal = document.getElementById("signOutModal");
+        const closeSignOutModal = document.getElementById("closeSignOutModal");
+        const cancelSignOut = document.getElementById("cancelSignOut");
+        const confirmSignOut = document.getElementById("confirmSignOut");
+        const signOutBtn = document.getElementById("sign-out-btn");
+        const openSignOutModal = document.getElementById("openSignOutModal");
+        const mobileSignOut = document.getElementById("mobile-sign-out");
+
+        signOutBtn.addEventListener("click", function (event) {
+          event.preventDefault();
+          signOutModal.classList.remove("hidden");
+        });
+
+        mobileSignOut.addEventListener("click", function (event) {
+          event.preventDefault();
+          signOutModal.classList.remove("hidden");
+        });
+
+        openSignOutModal.addEventListener("click", function (event) {
+          event.preventDefault();
+          signOutModal.classList.remove("hidden");
+        });
+
+        closeSignOutModal.addEventListener("click", function () {
+          signOutModal.classList.add("hidden");
+        });
+
+        cancelSignOut.addEventListener("click", function () {
+          signOutModal.classList.add("hidden");
+        });
+
+        confirmSignOut.addEventListener("click", function () {
+          logoutStudent();
+        });
+
+        function logoutStudent() {
+          localStorage.removeItem("studentId");
+          localStorage.removeItem("studentFirstName");
+          window.location.href = "index.html";
+        }
+      });
+    </script>
+  </body>
+</html>

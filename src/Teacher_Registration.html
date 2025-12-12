@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Teacher Registration | The Periodic Legends</title>
+   
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind configuration for glassmorphism and animations -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    backdropBlur: {
+                        xs: '2px',
+                        sm: '4px',
+                        md: '8px',
+                    },
+                    backgroundOpacity: {
+                        10: '0.1',
+                        15: '0.15',
+                    },
+                    borderOpacity: {
+                        20: '0.2',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px rgba(234, 179, 8, 0.3)' },
+                            '50%': { boxShadow: '0 0 20px rgba(234, 179, 8, 0.6)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(50px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)', opacity: '0.7' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    },
+                    animation: {
+                        pulseGlow: 'pulseGlow 2s ease-in-out infinite',
+                        slideUp: 'slideUp 0.6s ease-out',
+                        bounceIn: 'bounceIn 0.5s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Supabase JS client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS (Animate On Scroll) CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <!-- AOS JS -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <!-- reCAPTCHA v3 -->
+    <script src="https://www.google.com/recaptcha/api.js?render=6LdxhvYrAAAAANKcL1qODZCPdKiSmde_PravO7Ge"></script>
+    <!-- Local config file -->
+    <script src="/config.local.js"></script>
+    <!-- Enhanced Modal and Animation Styling -->
+    <style>
+        #loginModal {
+            z-index: 60;
+        }
+        #loginModal > div {
+            animation: bounceIn 0.5s ease-out;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .glass-effect:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.2);
+        }
+        .btn-glow {
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+        }
+        .image-scale {
+            transition: transform 0.3s ease;
+        }
+        .image-scale:hover {
+            transform: scale(1.05);
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #eab308;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-black text-white pt-16" style="font-family: 'Inter', sans-serif;" data-aos-easing="ease-out-back" data-aos-duration="800">
+   
+    <!-- Header with Glassmorphism -->
+    <header id="navbar" class="glass-effect px-6 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50" data-aos="fade-down" data-aos-duration="600">
+        <div class="flex items-center space-x-4 md:space-x-16">
+            <a href="index.html" class="flex items-center">
+                <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10 transition-transform duration-300 hover:scale-110 image-scale">
+                <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+            </a>
+            <nav class="hidden md:flex space-x-6">
+                <a href="index.html" class="hover:text-yellow-300 nav-link">Overview</a>
+                <a href="Home_About.html" class="hover:text-yellow-300 nav-link">About us</a>
+                <a href="Home_Contact.html" class="hover:text-yellow-300 nav-link">Contact</a>
+                <a href="index.html#download" class="hover:text-yellow-300 nav-link">Download</a>
+            </nav>
+        </div>
+        <div class="hidden md:flex space-x-4">
+            <a href="index.html#download" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded btn-glow hover:bg-yellow-500 hover:text-black">Back to Home</a>
+        </div>
+        <button id="menu-toggle" class="md:hidden text-white text-2xl">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+    <!-- Mobile Menu with Glassmorphism -->
+    <div id="mobile-menu" class="fixed top-0 right-0 glass-effect w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-4 py-6 space-y-4 transform translate-x-full transition-transform duration-500 ease-in-out">
+        <button id="menu-close" class="text-white text-2xl self-end">
+            <i class="fas fa-times"></i>
+        </button>
+        <nav class="flex flex-col space-y-4">
+            <a href="index.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Overview</a>
+            <a href="Home_About.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">About us</a>
+            <a href="Home_Contact.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Contact</a>
+            <a href="index.html#download" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Download</a>
+        </nav>
+        <div class="flex justify-center">
+            <button id="signInMobileBtn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded btn-glow hover:bg-yellow-500 hover:text-black">Sign In</button>
+        </div>
+    </div>
+   
+    <!-- Main Registration Content with Glassmorphism and AOS -->
+    <main class="min-h-screen flex items-center justify-center px-4 py-24 lg:px-48" data-aos="fade-up" data-aos-duration="1000">
+        <div class="glass-effect rounded-lg shadow-xl overflow-hidden w-full max-w-md p-8" data-aos="slide-up" data-aos-delay="200">
+            <div class="flex justify-center mb-8">
+                <img alt="TPL Logo" src="Assets/Group 17.png" class="w-16 h-16 image-scale">
+            </div>
+            <h2 class="text-2xl font-bold text-center text-yellow-400 mb-2">Teacher Registration</h2>
+            <p class="text-gray-300 text-center mb-8">Create your teacher account to access the dashboard</p>
+           
+            <form id="registrationForm" novalidate>
+                <div class="space-y-4">
+                    <div>
+                        <label for="givenName" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4">
+                                <div class="space-y-1">
+                                    <label for="givenName" class="block text-xs tracking-wide text-gray-400 uppercase">Given Name</label>
+                                    <input type="text" id="givenName" required pattern="^[A-Za-z]+$" title="Letters only" class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                                </div>
+                                <div class="space-y-1">
+                                    <label for="suffix" class="block text-xs tracking-wide text-gray-400 uppercase">Suffix</label>
+                                    <select id="suffix" class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                                        <option value="">None</option>
+                                        <option value="Jr.">Jr.</option>
+                                        <option value="Sr.">Sr.</option>
+                                        <option value="II">II</option>
+                                        <option value="III">III</option>
+                                        <option value="IV">IV</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label for="surname" class="block text-xs tracking-wide text-gray-400 uppercase">Surname</label>
+                                <input type="text" id="surname" required pattern="^[A-Za-z]+$" title="Letters only" class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                            </div>
+                        </div>
+                    </div>
+                  
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                        <input type="email" id="email" required class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                    </div>
+                  
+                    <div>
+                        <label for="teacherId" class="block text-sm font-medium text-gray-300 mb-1">Teacher ID</label>
+                        <input type="text" id="teacherId" required pattern="^\d{6}$" maxlength="6" inputmode="numeric" title="Enter exactly 6 digits" class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                    </div>
+                  
+                    <div>
+                        <label for="accessCode" class="block text-sm font-medium text-gray-300 mb-1">Access Code</label>
+                        <input type="text" id="accessCode" required class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                        <p class="text-xs text-gray-400 mt-1">Enter the code provided by your school</p>
+                    </div>
+                  
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                        <div class="relative">
+                            <input type="password" id="password" required minlength="8" class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                            <i id="togglePassword" class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 cursor-pointer"></i>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Minimum 8 characters with letters, numbers & special symbols</p>
+                    </div>
+                  
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+                        <div class="relative">
+                            <input type="password" id="confirmPassword" required class="w-full px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-white transition-all duration-300">
+                            <i id="toggleConfirmPassword" class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 cursor-pointer"></i>
+                        </div>
+                    </div>
+                </div>
+              
+                <div class="mt-6">
+                    <button type="submit" class="w-full bg-yellow-500 text-black px-4 py-2 rounded font-medium btn-glow hover:bg-yellow-600">Register</button>
+                </div>
+              
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-gray-400">
+                        Already have an account?
+                        <a href="#" id="loginLink" class="text-yellow-400 hover:text-yellow-300 nav-link">Sign in here</a>
+                    </p>
+                </div>
+            </form>
+           
+            <div id="message" class="mt-4 text-center text-sm" style="display: none;"></div>
+        </div>
+    </main>
+    <!-- Login Modal with Glassmorphism -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50">
+        <div class="glass-effect p-8 rounded-lg w-80 shadow-lg relative">
+            <button id="closeLoginModal" class="absolute top-3 right-3 text-gray-400 hover:text-yellow-300 text-2xl transition-colors duration-200">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Teacher Sign In</h2>
+           
+            <input type="text" id="loginTeacherId" placeholder="Teacher ID" class="w-full mb-2 px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-yellow-500 transition-all duration-300">
+            <div class="relative mb-4">
+                <input type="password" id="loginPassword" placeholder="Password" class="w-full pr-10 px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-yellow-500 transition-all duration-300">
+                <i id="loginTogglePassword" class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 cursor-pointer"></i>
+            </div>
+           
+            <button onclick="loginTeacher()" class="w-full bg-yellow-500 text-black px-4 py-2 rounded btn-glow hover:bg-yellow-600">Sign In</button>
+           
+            <p id="loginMessage" class="mt-3 text-center text-sm"></p>
+        </div>
+    </div>
+    <!-- Footer -->
+    <footer class="py-40" style="background: linear-gradient(to top, #000000, #000000 60%, #414141 100%);" data-aos="fade-up" data-aos-duration="1000">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm">
+            <div>
+                <img alt="TPL Logo" src="Assets/Group 17.png" class="w-12 h-12 mb-4 transition-transform duration-300 hover:scale-110 image-scale">
+                <h3 class="text-lg font-bold text-yellow-500 mb-2">The Periodic Legends</h3>
+                <p class="mb-4 text-gray-400">Earth science adventure learning platform for GAS students</p>
+            </div>
+            <div>
+                <h3 class="mb-4 font-bold">GET STARTED</h3>
+                <ul class="space-y-2">
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-globe mr-2 text-yellow-400"></i> Web Analytics
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fab fa-android mr-2 text-yellow-400"></i> Android Download
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-user-graduate mr-2 text-yellow-400"></i> Student Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="mb-4 font-bold">COMPANY</h3>
+                <ul class="space-y-2">
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-info-circle mr-2 text-yellow-400"></i> About Us
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-envelope mr-2 text-yellow-400"></i> Contact
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-blog mr-2 text-yellow-400"></i> Blog
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="mb-4 font-bold">RESOURCES</h3>
+                <ul class="space-y-2">
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-question-circle mr-2 text-yellow-400"></i> Help Center
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-shield-alt mr-2 text-yellow-400"></i> Privacy Policy
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-file-contract mr-2 text-yellow-400"></i> Terms of Service
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="Teacher_Registration.html">
+                            <i class="fas fa-chalkboard-teacher mr-2 text-yellow-400"></i> For Teachers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-800 text-center">
+            <p class="text-gray-500">© 2025 The Periodic Legends. All rights reserved.</p>
+        </div>
+    </footer>
+    <!-- Footer Modals -->
+    <div id="footerModals" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 p-4">
+        <div id="modalContent" class="glass-effect rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AOS
+            AOS.init({
+                duration: 800,
+                once: false,
+                easing: 'ease-out-back',
+                offset: 100,
+            });
+            // Initialize Supabase Client
+            let supabase;
+            try {
+                supabase = window.supabase.createClient(
+                    'https://kckasgowvaguzkdlpdyw.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+                );
+                console.log("Supabase initialized:", supabase);
+            } catch (err) {
+                console.error("Supabase initialization failed:", err);
+            }
+            // Password Toggle for Registration Form
+            const passwordInput = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+            const alphaOnlyFields = ['givenName', 'surname']
+                .map(id => document.getElementById(id))
+                .filter(Boolean);
+            const teacherIdField = document.getElementById('teacherId');
+            if (togglePassword) {
+                togglePassword.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
+            if (toggleConfirmPassword) {
+                toggleConfirmPassword.addEventListener('click', function() {
+                    const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    confirmPasswordInput.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
+            alphaOnlyFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    const sanitizedValue = this.value.replace(/[^A-Za-z]/g, '');
+                    if (sanitizedValue !== this.value) {
+                        this.value = sanitizedValue;
+                    }
+                });
+            });
+            if (teacherIdField) {
+                teacherIdField.addEventListener('input', function() {
+                    let digitsOnly = this.value.replace(/\D/g, '');
+                    if (digitsOnly.length > 6) {
+                        digitsOnly = digitsOnly.slice(0, 6);
+                    }
+                    if (digitsOnly !== this.value) {
+                        this.value = digitsOnly;
+                    }
+                });
+            }
+            // Password Toggle for Login Modal
+            const loginPasswordInput = document.getElementById('loginPassword');
+            const loginTogglePassword = document.getElementById('loginTogglePassword');
+            if (loginTogglePassword) {
+                loginTogglePassword.addEventListener('click', function() {
+                    const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    loginPasswordInput.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            }
+            // Mobile Menu Toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    document.getElementById('mobile-menu').classList.remove('translate-x-full');
+                });
+            }
+            const menuClose = document.getElementById('menu-close');
+            if (menuClose) {
+                menuClose.addEventListener('click', function() {
+                    document.getElementById('mobile-menu').classList.add('translate-x-full');
+                });
+            }
+            // Sign In Modal Toggle for Mobile
+            const signInMobileBtn = document.getElementById('signInMobileBtn');
+            if (signInMobileBtn) {
+                signInMobileBtn.addEventListener('click', () => toggleLoginModal(true));
+            }
+            // Login Modal Toggle
+            function toggleLoginModal(show) {
+                const modal = document.getElementById('loginModal');
+                if (modal) {
+                    modal.classList.toggle('hidden', !show);
+                }
+            }
+            window.toggleLoginModal = toggleLoginModal; // Make it globally accessible for inline onclick usage
+            const loginLink = document.getElementById('loginLink');
+            if (loginLink) {
+                loginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleLoginModal(true);
+                });
+            }
+            const closeLoginModal = document.getElementById('closeLoginModal');
+            if (closeLoginModal) {
+                closeLoginModal.addEventListener('click', () => toggleLoginModal(false));
+            }
+            const loginModal = document.getElementById('loginModal');
+            if (loginModal) {
+                loginModal.addEventListener('click', function(event) {
+                    if (event.target === this) {
+                        toggleLoginModal(false);
+                    }
+                });
+            }
+            // Transparent Navbar on Scroll
+            window.addEventListener('scroll', function () {
+                const navbar = document.getElementById('navbar');
+                if (window.scrollY > 50) {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.05)';
+                    navbar.style.backdropFilter = 'blur(12px)';
+                } else {
+                    navbar.style.background = 'rgba(255, 255, 255, 0.1)';
+                    navbar.style.backdropFilter = 'blur(10px)';
+                }
+            });
+            // Footer Modal Functionality
+            function openFooterModal(title, content) {
+                const modal = document.getElementById('footerModals');
+                const modalContent = document.getElementById('modalContent');
+              
+                modalContent.innerHTML = `
+                    <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-yellow-400">${title}</h2>
+                        <button id="closeFooterModal" class="text-white text-2xl hover:text-yellow-300 transition-colors duration-200">&times;</button>
+                    </div>
+                    <div class="text-gray-200">${content}</div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="close-footer-btn bg-yellow-500 text-black px-6 py-2 rounded btn-glow hover:bg-yellow-600">
+                            Close
+                        </button>
+                    </div>
+                    </div>
+                `;
+              
+                modal.classList.remove('hidden');
+                const closeButton = modalContent.querySelector('#closeFooterModal');
+                const footerCloseButton = modalContent.querySelector('.close-footer-btn');
+              
+                if (closeButton) {
+                    closeButton.addEventListener('click', closeFooterModal);
+                }
+                if (footerCloseButton) {
+                    footerCloseButton.addEventListener('click', closeFooterModal);
+                }
+            }
+            function closeFooterModal() {
+                const modal = document.getElementById('footerModals');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+            const footerLinks = document.querySelectorAll('footer a[href="#"]');
+            footerLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const linkText = this.textContent.trim().toLowerCase();
+                    const footerContent = {
+                        'web analytics': `
+                            <div class="space-y-4">
+                                <p><strong>Web Analytics Dashboard</strong></p>
+                                <p>Access real-time analytics for tracking student progress and engagement in Earth Science, designed for teachers at Caloocan High School.</p>
+                                <div class="glass-effect p-4 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Features:</h4>
+                                    <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li>Monitor individual student quiz performance</li>
+                                        <li>Track quest completion rates</li>
+                                        <li>View class-wide engagement metrics</li>
+                                        <li>Customize interventions based on data</li>
+                                    </ul>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-4">Requires: Latest Chrome, Firefox, or Edge browser, 5 Mbps internet, 1366x768 resolution</p>
+                            </div>
+                        `,
+                        'android download': `
+                            <div class="space-y-4">
+                                <p><strong>Android Mobile App</strong></p>
+                                <p>Download The Periodic Legends for Android to engage in Earth Science adventures through interactive gameplay.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h4 class="text-yellow-400">System Requirements</h4>
+                                        <ul class="text-sm mt-2 space-y-1">
+                                            <li>Android 8.0 (API 26) or higher</li>
+                                            <li>Quad-core 1.5 GHz processor</li>
+                                            <li>2 GB RAM</li>
+                                            <li>200 MB free storage</li>
+                                            <li>720x1280 resolution</li>
+                                        </ul>
+                                    </div>
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h4 class="text-yellow-400">Features</h4>
+                                        <ul class="text-sm mt-2 space-y-1">
+                                            <li>Curriculum-aligned quests</li>
+                                            <li>Interactive quizzes</li>
+                                            <li>Turn-based combat system</li>
+                                            <li>Progress syncing with web analytics</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-400">Version 1.2.3 | Requires stable internet for login and syncing</p>
+                            </div>
+                        `,
+                        'student login': `
+                            <div class="space-y-4">
+                                <p><strong>Student Portal Access</strong></p>
+                                <p>Login to access your personalized Earth Science learning dashboard, designed for GAS students at Caloocan High School.</p>
+                                <div class="glass-effect p-4 rounded-lg">
+                                    <h4 class="text-green-400 mb-2">Quick Access:</h4>
+                                    <button onclick="toggleLoginModal(true);" class="bg-green-500 text-black px-4 py-2 rounded btn-glow hover:bg-green-600 mr-2">
+                                        Student Login
+                                    </button>
+                                    <p class="text-sm mt-2">Use your Student ID and password to access:</p>
+                                    <ul class="list-disc list-inside text-sm text-gray-300 mt-1">
+                                        <li>Personalized Earth Science quests</li>
+                                        <li>Quiz performance tracking</li>
+                                        <li>Interactive learning modules</li>
+                                        <li>Reward system for progress</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `,
+                        'about us': `
+                            <div class="space-y-4">
+                                <p><strong>About The Periodic Legends</strong></p>
+                                <p>Developed by Elevate Studio, TPL is a turn-based RPG mobile app designed to enhance Earth Science education for General Academic Strand students at Caloocan High School.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h4 class="text-yellow-400 mb-2">Our Mission</h4>
+                                        <p class="text-sm">Increase student engagement and comprehension in Earth Science through gamified learning, aligned with the Philippine K-12 curriculum.</p>
+                                    </div>
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h4 class="text-yellow-400 mb-2">Founded</h4>
+                                        <p class="text-sm">2023 • STI College Caloocan</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                        'contact': `
+                            <div class="space-y-4">
+                                <p><strong>Contact Us</strong></p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="text-yellow-400 mb-2">Support</h4>
+                                        <p>support@periodiclegends.com</p>
+                                        <p>+63 (912) 345-6789</p>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-yellow-400 mb-2">School Inquiries</h4>
+                                        <p>admin@periodiclegends.com</p>
+                                        <p>Caloocan High School partnerships</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 space-y-3">
+                                    <input type="text" placeholder="Your email" class="w-full p-2 glass-effect rounded">
+                                    <textarea placeholder="Your message" rows="3" class="w-full p-2 glass-effect rounded"></textarea>
+                                    <button type="button" class="bg-yellow-500 text-black px-6 py-2 rounded btn-glow hover:bg-yellow-600">
+                                        Send Message
+                                    </button>
+                                </div>
+                            </div>
+                        `,
+                        'blog': `
+                            <div class="space-y-4">
+                                <p><strong>TPL Updates</strong></p>
+                                <div class="space-y-3">
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h5 class="text-yellow-400">New Geology Quests</h5>
+                                        <p class="text-sm text-gray-300">Explore rock formations and plate tectonics in our latest update for GAS students.</p>
+                                        <p class="text-xs text-gray-500">April 10, 2025</p>
+                                    </div>
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h5 class="text-yellow-400">Teacher Analytics Launched</h5>
+                                        <p class="text-sm text-gray-300">Track student progress with our new web-based dashboard.</p>
+                                        <p class="text-xs text-gray-500">March 20, 2025</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                        'help center': `
+                            <div class="space-y-4">
+                                <p><strong>Help & Support</strong></p>
+                                <p>Find solutions for using The Periodic Legends at Caloocan High School.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h4 class="text-yellow-400 mb-2">Getting Started</h4>
+                                        <ul class="text-sm space-y-1">
+                                            <li>Download and install the Android app</li>
+                                            <li>Register with your Student ID</li>
+                                            <li>Navigate the main menu and start quests</li>
+                                        </ul>
+                                    </div>
+                                    <div class="glass-effect p-3 rounded-lg">
+                                        <h4 class="text-yellow-400 mb-2">Troubleshooting</h4>
+                                        <ul class="text-sm space-y-1">
+                                            <li>Login issues: Check internet and credentials</li>
+                                            <li>Quiz sync errors: Ensure stable Wi-Fi</li>
+                                            <li>Contact support for app crashes</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="text-sm">For detailed guides, contact support@periodiclegends.com</p>
+                            </div>
+                        `,
+                        'privacy policy': `
+                            <div class="space-y-4 prose prose-invert max-w-none">
+                                <h3>Privacy Policy</h3>
+                                <p>The Periodic Legends respects your privacy and is committed to protecting personal data of GAS students and teachers at Caloocan High School.</p>
+                                <h4>Data We Collect</h4>
+                                <ul>
+                                    <li>Student ID and name</li>
+                                    <li>Quiz performance and quest progress</li>
+                                    <li>Device information (e.g., Android version)</li>
+                                    <li>Usage analytics for educational insights</li>
+                                </ul>
+                                <h4>How We Use Data</h4>
+                                <p>Data is used to track learning progress, provide personalized feedback, and improve the app. No data is shared with third parties except for educational purposes within Caloocan High School.</p>
+                                <p><strong>Last updated:</strong> April 2025</p>
+                            </div>
+                        `,
+                        'terms of service': `
+                            <div class="space-y-4">
+                                <h3 class="text-yellow-400">Terms of Service</h3>
+                                <p>By using The Periodic Legends, you agree to these terms for educational use at Caloocan High School.</p>
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Key Terms:</h4>
+                                    <ul class="list-disc list-inside text-sm space-y-1">
+                                        <li>For GAS students and teachers only</li>
+                                        <li>No commercial use or redistribution</li>
+                                        <li>Requires internet for full functionality</li>
+                                        <li>Account termination for misuse</li>
+                                    </ul>
+                                </div>
+                                <p class="text-sm">Contact admin@periodiclegends.com for inquiries.</p>
+                            </div>
+                        `
+                    };
+                  
+                    let content = '<p class="text-gray-400">Content not available yet.</p>';
+                    for (const [key, value] of Object.entries(footerContent)) {
+                        if (linkText.includes(key)) {
+                            content = value;
+                            break;
+                        }
+                    }
+                  
+                    openFooterModal(this.textContent.trim(), content);
+                });
+            });
+            // Close Footer Modal on Click Outside
+            document.getElementById('footerModals').addEventListener('click', function(e) {
+                if (e.target.id === 'footerModals') {
+                    closeFooterModal();
+                }
+            });
+            // Form Submission with Access Code and reCAPTCHA
+            document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+              
+                const givenName = document.getElementById('givenName').value.trim();
+                const surname = document.getElementById('surname').value.trim();
+                const suffix = document.getElementById('suffix').value.trim();
+                const email = document.getElementById('email').value;
+                const teacherId = document.getElementById('teacherId').value;
+                const accessCode = document.getElementById('accessCode').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const messageBox = document.getElementById('message');
+                const nameRegex = /^[A-Za-z\s]+$/;
+                const fullName = suffix
+                    ? `${givenName} ${surname}, ${suffix}`
+                    : `${givenName} ${surname}`;
+              
+                if (!givenName || !surname) {
+                    showMessage("Please complete the given name and surname fields", "error");
+                    return;
+                }
+                if (!nameRegex.test(givenName) || !nameRegex.test(surname)) {
+                    showMessage("Names may only include letters and spaces", "error");
+                    return;
+                }
+              
+                // Email Validation
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    showMessage("Please enter a valid email address (e.g., example@domain.com)", "error");
+                    return;
+                }
+              
+                // Password Validation
+                if (password !== confirmPassword) {
+                    showMessage("Passwords do not match", "error");
+                    return;
+                }
+                if (password.length < 8) {
+                    showMessage("Password must be at least 8 characters", "error");
+                    return;
+                }
+                const passwordStrengthRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+                if (!passwordStrengthRegex.test(password)) {
+                    showMessage("Password must include letters, numbers, and special characters", "error");
+                    return;
+                }
+              
+                // Access Code Validation
+                try {
+                    const { data: codeData, error: codeError } = await supabase
+                        .from('teacher_codes')
+                        .select('code, is_used, expires_at')
+                        .eq('code', accessCode)
+                        .single();
+                  
+                    if (codeError || !codeData) {
+                        showMessage("Invalid access code", "error");
+                        return;
+                    }
+                    if (codeData.is_used) {
+                        showMessage("This access code has already been used", "error");
+                        return;
+                    }
+                    if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
+                        showMessage("This access code has expired", "error");
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Access code validation error:", error);
+                    showMessage("Error validating access code. Please try again.", "error");
+                    return;
+                }
+              
+                // reCAPTCHA Validation
+                try {
+                    const token = await grecaptcha.execute('6LdxhvYrAAAAANKcL1qODZCPdKiSmde_PravO7Ge', { action: 'teacher_registration' });
+                    const captchaResponse = await fetch('/api/verify-recaptcha', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token })
+                    });
+                    const captchaResult = await captchaResponse.json();
+                  
+                    if (!captchaResult.success || captchaResult.score < 0.5) {
+                        showMessage("reCAPTCHA verification failed. Please try again.", "error");
+                        return;
+                    }
+                } catch (error) {
+                    console.error("reCAPTCHA error:", error);
+                    showMessage("Error verifying reCAPTCHA. Please try again.", "error");
+                    return;
+                }
+              
+                // Generate a salt and hash the password
+                const salt = generateSalt();
+                const hashedPassword = await hashPassword(password, salt);
+              
+                try {
+                    // Check if teacher ID already exists
+                    const { data: existingTeacher, error: checkError } = await supabase
+                        .from('teacher')
+                        .select('teacher_id')
+                        .eq('teacher_id', teacherId)
+                        .single();
+                  
+                    if (existingTeacher) {
+                        showMessage("Teacher ID already exists", "error");
+                        return;
+                    }
+                  
+                    // Insert new teacher
+                    const { data, error } = await supabase
+                        .from('teacher')
+                        .insert([
+                            {
+                                full_name: fullName,
+                                email: email,
+                                teacher_id: teacherId,
+                                password: hashedPassword,
+                                password_salt: salt,
+                                access_code: accessCode,
+                                created_at: new Date().toISOString()
+                            }
+                        ]);
+                  
+                    if (error) throw error;
+                  
+                    // Mark access code as used
+                    const { error: updateError } = await supabase
+                        .from('teacher_codes')
+                        .update({ is_used: true })
+                        .eq('code', accessCode);
+                  
+                    if (updateError) throw updateError;
+                  
+                    showMessage("Registration successful! You can now sign in.", "success");
+                    document.getElementById('registrationForm').reset();
+                  
+                } catch (error) {
+                    console.error("Registration error:", error);
+                    showMessage("Registration failed. Please try again.", "error");
+                }
+            });
+            // Teacher Login Function
+            async function loginTeacher() {
+                const teacherId = document.getElementById("loginTeacherId").value;
+                const password = document.getElementById("loginPassword").value;
+                const messageBox = document.getElementById("loginMessage");
+                if (!teacherId || !password) {
+                    showLoginMessage("Please enter both Teacher ID and Password", "error");
+                    return;
+                }
+                try {
+                    const { data, error } = await supabase
+                        .from("teacher")
+                        .select("full_name, password, password_salt")
+                        .eq("teacher_id", teacherId)
+                        .single();
+                    if (error || !data) {
+                        showLoginMessage("Invalid Teacher ID or Password", "error");
+                        return;
+                    }
+                    const hashedInputPassword = await hashPassword(password, data.password_salt);
+                    if (hashedInputPassword === data.password) {
+                        showLoginMessage("Login Successful! Redirecting...", "success");
+                        const firstName = data.full_name.split(" ")[0];
+                        localStorage.setItem("teacherId", teacherId);
+                        localStorage.setItem("teacherFirstName", firstName);
+                        setTimeout(() => {
+                            window.location.href = "Teacher_Dashboard.html";
+                        }, 1500);
+                    } else {
+                        showLoginMessage("Invalid Teacher ID or Password", "error");
+                    }
+                } catch (err) {
+                    console.error("Login Error:", err);
+                    showLoginMessage("An error occurred. Please try again later.", "error");
+                }
+            }
+            window.loginTeacher = loginTeacher; // Make it globally accessible for inline onclick usage
+            // Helper Functions
+            function generateSalt() {
+                return crypto.getRandomValues(new Uint8Array(16)).join('');
+            }
+            async function hashPassword(password, salt) {
+                const encoder = new TextEncoder();
+                const saltedPassword = password + salt;
+                const data = encoder.encode(saltedPassword);
+                const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+                return Array.from(new Uint8Array(hashBuffer))
+                    .map(byte => byte.toString(16).padStart(2, "0"))
+                    .join("");
+            }
+            function showMessage(message, type) {
+                const messageBox = document.getElementById('message');
+                if (!messageBox) {
+                    console.error("Message box element not found!");
+                    return;
+                }
+                messageBox.textContent = message;
+                messageBox.style.display = 'block';
+                messageBox.classList.remove('text-red-500', 'text-green-500');
+                messageBox.classList.add(type === "error" ? "text-red-500" : "text-green-500");
+            }
+            function showLoginMessage(message, type) {
+                const messageBox = document.getElementById('loginMessage');
+                if (!messageBox) {
+                    console.error("Login message box element not found!");
+                    return;
+                }
+                messageBox.textContent = message;
+                messageBox.classList.remove('text-red-500', 'text-green-500');
+                messageBox.classList.add(type === "error" ? "text-red-500" : "text-green-500");
+            }
+        });
+    </script>
+</body>
+</html>

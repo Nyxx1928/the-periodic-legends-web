@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Quests | TPL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+       
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.10);
+            --glass-bg-dark: rgba(30, 32, 34, 0.85);
+            --border: rgba(255, 255, 255, 0.18);
+            --border-dark: rgba(60, 60, 60, 0.18);
+            --shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .glassmorphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .glassmorphism-dark {
+            background: var(--glass-bg-dark);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-dark);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+        }
+        /* CHARTS CONTAINER */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            max-width: 7xl;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 768px) {
+            .charts-container { grid-template-columns: repeat(2, 1fr); }
+        }
+        .chart-wrapper {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid rgba(250, 204, 21, 0.15);
+        }
+        .chart-wrapper:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(250, 204, 21, 0.15);
+            border-color: rgba(250, 204, 21, 0.4);
+        }
+        .chart-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.08) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            border-radius: 1rem;
+        }
+        .chart-wrapper:hover::before { opacity: 1; }
+        .chart-header {
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .chart-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(to right, #fff, #fbbf24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 260px !important;
+            min-height: 220px;
+        }
+        @media (max-width: 640px) {
+            .chart-wrapper canvas { height: 200px !important; }
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .pagination button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status-filter {
+            background: rgba(30, 30, 30, 0.8);
+            color: #ffffff;
+            border: 1px solid #202221;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            backdrop-filter: blur(8px);
+        }
+        #status-filter:focus {
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.25);
+            border-color: #facc15;
+        }
+/* TABLE OPTIMIZATION */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+}
+td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+tr {
+    transition: all 0.2s ease;
+}
+tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+}
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+/* Status colors approximated with neutral hex values so no Tailwind processing is required */
+.status-completed {
+    background-color: #064e3b;
+    color: #86efac;
+    border: 1px solid #047857;
+}
+.status-active {
+    background-color: #78350f;
+    color: #fef3c7;
+    border: 1px solid #b45309;
+}
+.status-other {
+    background-color: #1f2937;
+    color: #d1d5db;
+    border: 1px solid #4b5563;
+}
+/* Mobile Card */
+.mobile-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+.mobile-card:hover {
+    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.5);
+    transform: translateY(-0.25rem);
+}
+.mobile-card-title {
+    font-weight: 600;
+    color: #facc15;
+    font-size: 1rem;
+}
+.mobile-card-meta {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+}
+.mobile-card-status {
+    margin-top: 0.75rem;
+}
+/* Smooth scroll on mobile */
+.overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #facc15 #1a1a1a;
+}
+.overflow-x-auto::-webkit-scrollbar {
+    height: 8px;
+}
+.overflow-x-auto::-webkit-scrollbar-track {
+    background-color: #111827;
+    border-radius: 9999px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: #facc15;
+    border-radius: 9999px;
+    border: 2px solid #000;
+}
+    </style>
+</head>
+<body class="bg-black text-white" style="font-family: 'Inter', sans-serif;">
+<!-- HEADER & MODAL -->
+<header id="navbar" class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50">
+    <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="Teacher_Dashboard.html" class="flex items-center">
+            <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10">
+            <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+            <a href="Teacher_Dashboard.html" class="hover:text-yellow-300">Dashboard</a>
+            <a href="Teacher_Quiz.html" class="hover:text-yellow-300">Quizzes</a>
+            <a href="Teacher_Quest.html" class="text-yellow-300">Quests</a>
+            <a href="Teacher_Scores.html" class="hover:text-yellow-300">Scores</a>
+            <a href="Teacher_Tracking.html" class="hover:text-yellow-300">Tracking</a>
+            <a href="Teacher_Resources.html" class="hover:text-yellow-300">Resources</a>
+        </nav>
+    </div>
+    <div class="hidden md:flex space-x-4">
+        <button id="sign-out-btn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">
+            Sign Out
+        </button>
+    </div>
+    <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+<!-- Mobile Menu & Sign Out Modal -->
+<div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+    <button id="menu-close" class="text-white text-2xl self-end">
+        <i class="fas fa-times"></i>
+    </button>
+    <nav class="flex flex-col space-y-4">
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Dashboard.html">Dashboard</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Quiz.html">Quizzes</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg bg-white bg-opacity-15 backdrop-blur-md text-yellow-300 transition" href="Teacher_Quest.html">Quests</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Scores.html">Scores</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Tracking.html">Tracking</a>
+        <a class="text-lg w-full text-left px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-15 hover:text-yellow-300 transition" href="Teacher_Resources.html">Resources</a>
+    </nav>
+    <div class="flex justify-center">
+        <button id="openSignOutModal" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign Out</button>
+    </div>
+</div>
+<div id="signOutModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+    <div class="glassmorphism text-white p-8 rounded-lg w-80 shadow-lg relative">
+        <button id="closeSignOutModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">&times;</button>
+        <h2 class="text-xl font-bold mb-4 text-center">Sign Out</h2>
+        <p class="text-gray-300 text-center mb-6">Are you sure you want to sign out?</p>
+        <div class="flex justify-between">
+            <button id="confirmSignOut" class="w-full bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black mr-2">Yes</button>
+            <button id="cancelSignOut" class="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 ml-2">Cancel</button>
+        </div>
+    </div>
+</div>
+<main class="p-4 sm:p-8 mt-32">
+    <h1 class="text-4xl sm:text-5xl font-bold mb-4">
+        <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">
+            Quests Dashboard
+        </span>
+    </h1>
+    <p id="teacherGreeting" class="text-xl sm:text-2xl mb-8 text-gray-300">Welcome!</p>
+    <div id="content" class="hidden">
+        <div class="glassmorphism p-4 rounded-lg mb-8">
+            <h2 class="text-lg sm:text-xl mb-4 text-yellow-300">Student Quest Progress</h2>
+            <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+                <input type="text" id="filterQuest" placeholder="Filter by Quest Title" class="px-4 py-2 bg-white bg-opacity-10 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:border-yellow-500 focus:bg-opacity-20 transition">
+                <input type="text" id="filterStudent" placeholder="Filter by Student Name" class="px-4 py-2 bg-white bg-opacity-10 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:border-yellow-500 focus:bg-opacity-20 transition">
+                <select id="status-filter" class="glassmorphism-dark">
+                    <option value="">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="active">Active</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="gradeFilter" class="glassmorphism-dark">
+                    <option value="">All Grades</option>
+                </select>
+                <select id="sectionFilter" class="glassmorphism-dark">
+                    <option value="">All Sections</option>
+                </select>
+                <button id="clearFilters" class="px-4 py-2 bg-yellow-500 text-black font-medium rounded-lg hover:bg-yellow-400 transition transform hover:scale-105">
+                    Clear Filters
+                </button>
+            </div>
+            <!-- OPTIMIZED CHARTS -->
+            <div class="charts-container">
+                <div class="glassmorphism-dark chart-wrapper group">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Quest Status Distribution</h3>
+                        <i class="ri-pie-chart-2-line text-yellow-400 text-xl opacity-70 group-hover:opacity-100 transition"></i>
+                    </div>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="glassmorphism-dark chart-wrapper group">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Quest Activity Over Time</h3>
+                        <i class="ri-line-chart-line text-yellow-400 text-xl opacity-70 group-hover:opacity-100 transition"></i>
+                    </div>
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+            <!-- REPLACE THE ENTIRE <div class="overflow-x-auto"> BLOCK WITH THIS -->
+<div class="overflow-x-auto -mx-4 sm:mx-0">
+    <div class="inline-block min-w-full align-middle">
+        <div class="overflow-hidden glassmorphism rounded-xl">
+            <table class="min-w-full divide-y divide-white/20">
+                <thead class="bg-white bg-opacity-10 backdrop-blur-md sticky top-0 z-10">
+                    <tr>
+                        <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-yellow-300 uppercase tracking-wider">Quest</th>
+                        <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-yellow-300 uppercase tracking-wider hidden sm:table-cell">Student</th>
+                        <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-yellow-300 uppercase tracking-wider hidden md:table-cell">Character</th>
+                        <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-yellow-300 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-3 py-4 text-left text-xs font-semibold text-yellow-300 uppercase tracking-wider hidden lg:table-cell">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="studentQuestsTableBody" class="bg-transparent divide-y divide-white/10">
+                    <!-- Rows injected by JS -->
+                </tbody>
+            </table>
+        </div>
+        <!-- Mobile Card View (fallback when table is too small) -->
+        <div id="mobileCardView" class="sm:hidden space-y-3 mt-4"></div>
+    </div>
+                <div class="pagination">
+                    <button id="prevPage" disabled>Previous</button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="nextPage" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loading" class="text-center py-16">
+        <i class="fas fa-spinner fa-spin text-4xl text-yellow-500"></i>
+        <p class="mt-4 text-xl">Loading your dashboard...</p>
+    </div>
+    <div id="error" class="hidden text-center py-16 text-red-500">
+        <i class="fas fa-exclamation-circle text-4xl"></i>
+        <p class="mt-4 text-xl">Session expired. Redirecting to login...</p>
+    </div>
+</main>
+<script>
+    const supabase = window.supabase.createClient(
+        'https://kckasgowvaguzkdlpdyw.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+    );
+    let statusChart = null;
+    let activityChart = null;
+    let allQuests = [], filteredQuests = [], currentPage = 1, itemsPerPage = 10;
+    async function validateTeacherSession() {
+        const teacherId = localStorage.getItem("teacherId");
+        const teacherName = localStorage.getItem("teacherFirstName");
+        if (!teacherId) return showErrorAndRedirect();
+        try {
+            const { data, error } = await supabase
+                .from('teacher')
+                .select('teacher_id')
+                .eq('teacher_id', teacherId)
+                .single();
+            if (error || !data) {
+                localStorage.clear();
+                return showErrorAndRedirect();
+            }
+            document.getElementById("teacherGreeting").textContent = `Welcome back, ${teacherName || 'Teacher'}!`;
+            document.getElementById("loading").classList.add("hidden");
+            document.getElementById("content").classList.remove("hidden");
+            return true;
+        } catch (err) {
+            return showErrorAndRedirect();
+        }
+    }
+    function showErrorAndRedirect() {
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("error").classList.remove("hidden");
+        setTimeout(() => window.location.href = "index.html", 2000);
+    }
+    function logoutTeacher() {
+        localStorage.removeItem("teacherId");
+        localStorage.removeItem("teacherFirstName");
+        window.location.href = "index.html";
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('sign-out-btn').onclick = () => document.getElementById('signOutModal').classList.remove('hidden');
+        document.getElementById('openSignOutModal').onclick = () => document.getElementById('signOutModal').classList.remove('hidden');
+        document.getElementById('closeSignOutModal').onclick = () => document.getElementById('signOutModal').classList.add('hidden');
+        document.getElementById('cancelSignOut').onclick = () => document.getElementById('signOutModal').classList.add('hidden');
+        document.getElementById('confirmSignOut').onclick = logoutTeacher;
+        document.getElementById('menu-toggle').onclick = () => document.getElementById('mobile-menu').classList.remove('translate-x-full');
+        document.getElementById('menu-close').onclick = () => document.getElementById('mobile-menu').classList.add('translate-x-full');
+        validateTeacherSession().then(valid => valid && fetchStudentQuests());
+    });
+    async function fetchStudentQuests() {
+        if (!(await validateTeacherSession())) return;
+        try {
+            const { data } = await supabase
+                .from('player_quests')
+                .select(`
+                    quest_title, status, created_at, character_id,
+                    characters (
+                        character_id, student_id, character_name,
+                        student:student_id (full_name, section, grade_level)
+                    )
+                `)
+                .order('created_at', { ascending: false });
+            allQuests = (data || []).map(pq => ({
+                quest_title: pq.quest_title || 'Unknown',
+                student_name: (pq.characters?.student?.full_name) || 'Unknown',
+                character_name: pq.characters?.character_name || 'Unknown',
+                status: pq.status || 'Unknown',
+                created_at: pq.created_at,
+                section: pq.characters?.student?.section || null,
+                grade_level: pq.characters?.student?.grade_level || null
+            }));
+            filteredQuests = [...allQuests];
+            applyFilters();
+            // Populate grade and section filters after data is loaded
+            fetchSections();
+            fetchGradeLevels();
+        } catch (err) {
+            document.getElementById("studentQuestsTableBody").innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-400">Error loading quests.</td></tr>`;
+        }
+    }
+    function applyFilters() {
+        const quest = document.getElementById('filterQuest').value.toLowerCase();
+        const student = document.getElementById('filterStudent').value.toLowerCase();
+        const status = document.getElementById('status-filter').value;
+        const section = document.getElementById('sectionFilter').value;
+        const gradeLevel = document.getElementById('gradeFilter').value;
+        filteredQuests = allQuests.filter(q => {
+            const matchQuest = q.quest_title.toLowerCase().includes(quest);
+            const matchStudent = q.student_name.toLowerCase().includes(student);
+            const matchStatus = !status ||
+                (status === 'other' ? !['completed','active'].includes(q.status.toLowerCase()) : q.status.toLowerCase() === status);
+            // Filter by section - case-insensitive comparison
+            const matchSection = !section || (q.section && q.section.toUpperCase() === section.toUpperCase());
+            // Filter by grade level - convert to number for comparison
+            const matchGrade = !gradeLevel || (q.grade_level && Number(q.grade_level) === Number(gradeLevel));
+            return matchQuest && matchStudent && matchStatus && matchSection && matchGrade;
+        });
+        currentPage = 1; // Reset to page 1 when filters change
+        renderTable();
+        updateCharts();
+        updatePagination();
+    }
+    function renderPage() {
+        // Just render the current page without resetting or applying filters
+        renderTable();
+        updatePagination();
+    }
+    function renderTable() {
+    const tbody = document.getElementById('studentQuestsTableBody');
+    const mobileView = document.getElementById('mobileCardView');
+    tbody.innerHTML = '';
+    mobileView.innerHTML = '';
+    const start = (currentPage - 1) * itemsPerPage;
+    const page = filteredQuests.slice(start, start + itemsPerPage);
+    if (!page.length) {
+        const emptyMsg = `<tr><td colspan="5" class="text-center py-12 text-gray-400">
+            <i class="ri-inbox-line text-4xl mb-3 block"></i>
+            <p>No quests found.</p>
+            <p class="text-xs mt-2">Try adjusting your filters</p>
+        </td></tr>`;
+        tbody.innerHTML = emptyMsg;
+        mobileView.innerHTML = `<div class="text-center py-12 text-gray-400">
+            <i class="ri-inbox-line text-4xl mb-3"></i>
+            <p>No quests found.</p>
+        </div>`;
+        return;
+    }
+    page.forEach(q => {
+        const statusLower = q.status.toLowerCase();
+        const statusClass = statusLower === 'completed' ? 'status-completed' :
+                           statusLower === 'active' ? 'status-active' : 'status-other';
+        const statusText = q.status.charAt(0).toUpperCase() + q.status.slice(1);
+        const date = new Date(q.created_at);
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        // Desktop Row
+        const row = `
+            <tr class="hover:bg-white hover:bg-opacity-5 transition-all duration-200">
+                <td class="px-3 py-4">
+                    <div class="flex items-center">
+                        <i class="ri-scroll-text-line text-yellow-400 mr-2"></i>
+                        <span class="font-medium text-white truncate max-w-32 sm:max-w-48">${q.quest_title}</span>
+                    </div>
+                </td>
+                <td class="hidden sm:table-cell">
+                    <div class="flex items-center">
+                        <i class="ri-user-line text-gray-400 mr-2"></i>
+                        ${q.student_name}
+                    </div>
+                </td>
+                <td class="hidden md:table-cell text-gray-300">
+                    <div class="flex items-center">
+                        <i class="ri-user-star-line text-purple-400 mr-2"></i>
+                        ${q.character_name}
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </td>
+                <td class="hidden lg:table-cell text-gray-400 text-xs">
+                    ${formattedDate}
+                </td>
+            </tr>`;
+        tbody.innerHTML += row;
+        // Mobile Card
+        const card = `
+            <div class="mobile-card">
+                <div class="mobile-card-title">${q.quest_title}</div>
+                <div class="mobile-card-meta">
+                    <span class="inline-flex items-center">
+                        <i class="ri-user-line text-gray-500 mr-1"></i> ${q.student_name}
+                    </span>
+                    <span class="mx-2 text-gray-600">•</span>
+                    <span class="inline-flex items-center">
+                        <i class="ri-user-star-line text-purple-500 mr-1"></i> ${q.character_name}
+                    </span>
+                </div>
+                <div class="mobile-card-status mt-3">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <span class="float-right text-xs text-gray-500">${formattedDate}</span>
+                </div>
+            </div>`;
+        mobileView.innerHTML += card;
+    });
+    }
+    function updatePagination() {
+        const total = Math.ceil(filteredQuests.length / itemsPerPage);
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${total || 1}`;
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage >= total;
+    }
+    function updateCharts() {
+    const statusCounts = { completed: 0, active: 0, other: 0 };
+    const dates = {};
+    const dateToTime = {};
+    filteredQuests.forEach(q => {
+        const s = q.status.toLowerCase();
+        if (s === 'completed') statusCounts.completed++;
+        else if (s === 'active') statusCounts.active++;
+        else statusCounts.other++;
+        const date = new Date(q.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dates[date] = (dates[date] || 0) + 1;
+        if (!(date in dateToTime)) {
+            dateToTime[date] = new Date(q.created_at).getTime();
+        }
+    });
+    const labels = Object.keys(dates).sort((a, b) => dateToTime[a] - dateToTime[b]);
+    const activityData = labels.map(d => dates[d]);
+        // Empty state
+        if (filteredQuests.length === 0) {
+            document.querySelector('.charts-container').innerHTML = `
+                <div class="col-span-2 text-center py-16">
+                    <i class="ri-bar-chart-box-line text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-xl text-gray-400">No quest data matches your filters.</p>
+                    <p class="text-sm text-gray-500 mt-2">Try adjusting the filters above.</p>
+                </div>`;
+            return;
+        }
+        // Destroy old charts
+        if (statusChart) statusChart.destroy();
+        if (activityChart) activityChart.destroy();
+        // DOUGHNUT CHART
+        statusChart = new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Active', 'Other'],
+                datasets: [{
+                    data: [statusCounts.completed, statusCounts.active, statusCounts.other],
+                    backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(251, 146, 60, 0.8)', 'rgba(107, 114, 128, 0.8)'],
+                    borderColor: ['#22c55e', '#fb923c', '#6b7280'],
+                    borderWidth: 2,
+                    hoverOffset: 12,
+                    cutout: '68%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e5e7eb', font: { size: 12, family: 'Inter' }, padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 32, 34, 0.95)',
+                        titleColor: '#fbbf24',
+                        bodyColor: '#e5e7eb',
+                        borderColor: '#facc15',
+                        borderWidth: 1,
+                        cornerRadius: 8
+                    }
+                },
+                animation: { animateRotate: true, duration: 1400, easing: 'easeOutQuart' }
+            }
+        });
+        // LINE CHART
+        activityChart = new Chart(document.getElementById('activityChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Quests Created',
+                    data: activityData,
+                    borderColor: '#facc15',
+                    backgroundColor: 'rgba(250, 204, 21, 0.18)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#facc15',
+                    pointBorderColor: '#000',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 11 }, maxRotation: 0 } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.88)',
+                        titleColor: '#facc15',
+                        bodyColor: '#fff',
+                        borderColor: '#facc15',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: { label: ctx => ` ${ctx.parsed.y} quest${ctx.parsed.y !== 1 ? 's' : ''} created` }
+                    }
+                },
+                animation: { tension: { duration: 1800, easing: 'easeOutQuart' } }
+            }
+        });
+    }
+    // Events
+    document.getElementById('prevPage').onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderPage();
+        }
+    };
+    document.getElementById('nextPage').onclick = () => {
+        const totalPages = Math.ceil(filteredQuests.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderPage();
+        }
+    };
+    // Fetch sections for filter dropdown
+    async function fetchSections() {
+        try {
+            // Extract unique sections directly from already fetched quests
+            const normalizedSections = allQuests
+                .map(q => q.section?.toUpperCase())
+                .filter(section => section && (section === 'GAS1' || section === 'GAS2'));
+            const uniqueSections = [...new Set(normalizedSections)].sort();
+            const sectionSelect = document.getElementById('sectionFilter');
+            sectionSelect.innerHTML = '<option value="">All Sections</option>';
+            uniqueSections.forEach(section => {
+                const option = document.createElement('option');
+                option.value = section;
+                option.textContent = section;
+                sectionSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error fetching sections:", error);
+        }
+    }
+    // Fetch grade levels for filter dropdown
+    async function fetchGradeLevels() {
+        try {
+            // Extract unique grade levels directly from already fetched quests
+            const uniqueGrades = [...new Set(allQuests
+                .map(q => q.grade_level)
+                .filter(grade => grade !== null && grade !== undefined))]
+                .sort((a, b) => a - b);
+            const gradeSelect = document.getElementById('gradeFilter');
+            gradeSelect.innerHTML = '<option value="">All Grades</option>';
+            uniqueGrades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade;
+                option.textContent = `Grade ${grade}`;
+                gradeSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error fetching grade levels:", error);
+        }
+    }
+    document.getElementById('filterQuest').addEventListener('input', applyFilters);
+    document.getElementById('filterStudent').addEventListener('input', applyFilters);
+    document.getElementById('status-filter').addEventListener('change', applyFilters);
+    document.getElementById('gradeFilter').addEventListener('change', applyFilters);
+    document.getElementById('sectionFilter').addEventListener('change', applyFilters);
+    document.getElementById('clearFilters').addEventListener('click', () => {
+        document.getElementById('filterQuest').value = '';
+        document.getElementById('filterStudent').value = '';
+        document.getElementById('status-filter').value = '';
+        document.getElementById('gradeFilter').value = '';
+        document.getElementById('sectionFilter').value = '';
+        applyFilters();
+    });
+</script>
+</body>
+</html>

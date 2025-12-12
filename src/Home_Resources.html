@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resources</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+</head>
+<body class="bg-black text-white pt-16" style="font-family: 'Inter', sans-serif;" data-aos-easing="ease-out-cubic" data-aos-duration="1000">
+    
+    <!-- Header with Glassmorphism (Desktop Navbar) -->
+<header id="navbar" class="bg-white bg-opacity-10 backdrop-blur-md border border-white border-opacity-20 text-white px-8 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50" data-aos="fade-down">
+    <div class="flex items-center space-x-4 md:space-x-16">
+        <a href="index.html" class="flex items-center">
+            <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10">
+            <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+        </a>
+        <nav class="hidden md:flex space-x-6">
+            <a href="index.html" class="hover:text-yellow-300">Overview</a>
+            <a href="Home_Resources.html" class="text-yellow-300">Resources</a>
+            <a href="Home_About.html" class="hover:text-yellow-300">About us</a>
+            <a href="Home_Contact.html" class="hover:text-yellow-300">Contact</a>
+            <a href="index.html#download" class="hover:text-yellow-300">Download</a>
+        </nav>
+    </div>
+    <div class="hidden md:flex space-x-4">
+        <button id="signInBtn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded hover:bg-yellow-500 hover:text-black">Sign In</button>
+    </div>
+    <!-- Mobile menu burger -->
+    <button id="menu-toggle" class="md:hidden text-white text-2xl">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+
+<!-- Mobile Menu with Glassmorphism -->
+<div id="mobile-menu" class="fixed top-0 right-0 bg-white bg-opacity-15 backdrop-blur-md border-l border-white border-opacity-20 w-1/2 md:w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-300">
+    <button id="menu-close" class="text-white text-2 self-end">
+        <i class="fas fa-times"></i>
+    </button>
+    <nav class="flex flex-col space-y-4">
+        <a href="index.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Overview</a>
+        <a href="Home_Resources.html" class="text-lg text-white text-yellow-300 px-4 py-2 rounded-lg transition">Resources</a>
+        <a href="Home_About.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">About us</a>
+        <a href="Home_Contact.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Contact</a>
+        <a href="index.html#download" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Download</a>
+    </nav>
+    <div class="flex justify-center">
+        <button id="signInMobileBtn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded hover:bg-yellow-500 hover:text-black transition">Sign In</button>
+    </div>
+</div>
+    
+    <!-- Sign In Modal with Glassmorphism -->
+    <div id="signInModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50 p-4">
+        <div class="bg-white bg-opacity-15 backdrop-blur-md border border-white border-opacity-20 text-white p-6 md:p-8 rounded-lg w-full max-w-sm shadow-lg relative">
+            <button id="closeModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Sign in to TPL</h2>
+
+            <div id="unifiedForm">
+                <input type="text" id="user-id" placeholder="Enter your ID" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" class="w-full mb-2 px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-yellow-500 transition-all duration-300">
+                <div class="relative mb-4">
+                    <input 
+                        type="password" 
+                        id="user-password" 
+                        placeholder="Enter your password" 
+                        class="w-full pr-10 px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-yellow-500 transition-all duration-300"
+                    >
+                    <i 
+                        id="togglePassword" 
+                        class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 cursor-pointer"
+                    ></i>
+                </div>
+                <button id="unifiedSignInBtn" class="w-full bg-yellow-500 text-black px-4 py-3 rounded hover:bg-yellow-600 min-h-[44px] font-medium">Sign In</button>
+                <p id="message" class="mt-3 text-center text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+
+<!-- Hero Section for Resources -->
+<section class="pt-32 pb-20 px-6 md:px-16" data-aos="fade-up">
+    <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">Earth Science RPG Resources</h1>
+        <p class="text-xl mb-8 text-gray-300">Access lesson plans, quizzes, and educational materials for your Earth Science adventure</p>
+        <div class="flex justify-center gap-4">
+            <a href="#lesson-plans" class="bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-600 transition">View Lesson Plans</a>
+            <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Teacher_Guides.pdf" download class="bg-transparent border border-yellow-500 text-yellow-500 px-6 py-3 rounded-lg hover:bg-yellow-500 hover:text-black transition">Teacher Guides</a>
+        </div>
+    </div>
+</section>
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+
+ <!-- Resource Categories -->
+ <section class="py-16 px-6 md:px-16 bg-gradient-to-b from-black to-[#101010]" data-aos="fade-up">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold mb-12 text-center">Explore Resources by Category</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Category 1 -->
+            <div class="bg-[#171918] p-8 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-globe-americas text-2xl text-black"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Geology & Earth Structure</h3>
+                <p class="text-gray-400 mb-6">Explore rock formations, plate tectonics, and Earth's internal structure through interactive lessons.</p>
+                <a href="#geology" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                    Browse Resources <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            
+            <!-- Category 2 -->
+            <div class="bg-[#171918] p-8 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-cloud-sun-rain text-2xl text-black"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Weather & Climate</h3>
+                <p class="text-gray-400 mb-6">Understand atmospheric processes, weather patterns, and climate systems with our comprehensive guides.</p>
+                <a href="#weather" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                    Browse Resources <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            
+            <!-- Category 3 -->
+            <div class="bg-[#171918] p-8 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-water text-2xl text-black"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Oceans & Hydrology</h3>
+                <p class="text-gray-400 mb-6">Dive into ocean ecosystems, water cycles, and the importance of Earth's aquatic systems.</p>
+                <a href="#oceans" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                    Browse Resources <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+    
+    <!-- Lesson Plans Section -->
+<section id="lesson-plans" class="py-20 px-6 md:px-16" data-aos="fade-up">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-12">
+            <h2 class="text-3xl font-bold">Lesson Plans (High School)</h2>
+        </div>
+        <div id="lesson-plans-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Formation of Stratified Rocks -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card">
+                <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Formation of Stratified Rocks</h3>
+                    <p class="text-gray-400 mb-4">Describe how layers of rocks (stratified rocks) are formed.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Geology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Rock Layers</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="stratified-rocks">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Earth's Subsystems Quest -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card">
+                <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Earth's Subsystems Quest</h3>
+                    <p class="text-gray-400 mb-4">Explore the atmosphere, geosphere, hydrosphere, and biosphere, and how matter and energy flow between them.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Geology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Earth Systems</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="subsystems">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Rock Cycle Chronicles -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card">
+                <div class="h-48 bg-gradient-to-br from-red-500 to-orange-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Rock Cycle Chronicles</h3>
+                    <p class="text-gray-400 mb-4">Classify igneous, sedimentary, and metamorphic rocks and understand their formation processes.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Geology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Rocks</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="rock-cycle">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Core Heat Expedition -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card">
+                <div class="h-48 bg-gradient-to-br from-orange-500 to-yellow-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Core Heat Expedition</h3>
+                    <p class="text-gray-400 mb-4">Investigate the sources of Earth's internal heat and the process of magma formation.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Geology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Magmatism</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="internal-heat">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Metamorphism Journey -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card">
+                <div class="h-48 bg-gradient-to-br from-purple-500 to-pink-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Metamorphism Journey</h3>
+                    <p class="text-gray-400 mb-4">Learn about metamorphic grades, prograde vs. retrograde metamorphism, and types of metamorphism.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Geology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Metamorphism</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="metamorphism">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- The Beginning of Life on Earth -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card">
+                <div class="h-48 bg-gradient-to-br from-green-500 to-teal-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">The Beginning of Life on Earth</h3>
+                    <p class="text-gray-400 mb-4">Explore theories on how life emerged and evolved on Earth.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Biology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Origin of Life</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="origin-of-life">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Unifying Themes: Cell as the Basic Unit -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card hidden">
+                <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Unifying Themes: Cell as the Basic Unit</h3>
+                    <p class="text-gray-400 mb-4">Understand cell structure, function, and their role in ecosystems and evolution.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Biology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Cell Biology</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="unifying-themes">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Animal Reproduction -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card hidden">
+                <div class="h-48 bg-gradient-to-br from-red-500 to-orange-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Animal Reproduction</h3>
+                    <p class="text-gray-400 mb-4">Learn about asexual and sexual reproduction in animals.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Biology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Reproduction</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="animal-reproduction">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Genetic Engineering -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card hidden">
+                <div class="h-48 bg-gradient-to-br from-purple-500 to-pink-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Genetic Engineering</h3>
+                    <p class="text-gray-400 mb-4">Explore the history and processes of genetic engineering.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Biology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Genetics</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="genetic-engineering">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- How Animals Survive -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card hidden">
+                <div class="h-48 bg-gradient-to-br from-green-500 to-teal-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">How Animals Survive</h3>
+                    <p class="text-gray-400 mb-4">Investigate digestion, circulation, and other organ systems in animals.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Biology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Physiology</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="animal-survival">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- How Organisms Change -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card hidden">
+                <div class="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">How Organisms Change</h3>
+                    <p class="text-gray-400 mb-4">Understand evolution and adaptation in populations over time.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Biology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Evolution</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="organism-change">View Lesson Plan →</button>
+                </div>
+            </div>
+            <!-- Biotic Potential and Environmental Resistance -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300 lesson-card hidden">
+                <div class="h-48 bg-gradient-to-br from-red-500 to-orange-600 relative">
+                    <div class="absolute bottom-0 right-0 bg-yellow-500 text-black px-3 py-1 text-sm font-bold">
+                        HIGH SCHOOL
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-2">Biotic Potential and Environmental Resistance</h3>
+                    <p class="text-gray-400 mb-4">Explore factors affecting population growth and survival.</p>
+                    <div class="flex items-center mb-4">
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Ecology</span>
+                        <span class="bg-[#202221] text-xs px-2 py-1 rounded mr-2">Population Dynamics</span>
+                    </div>
+                    <button class="text-yellow-500 hover:text-yellow-400 font-medium view-lesson" data-lesson="biotic-potential">View Lesson Plan →</button>
+                </div>
+            </div>
+        </div>
+        <div class="mt-12 text-center">
+            <button id="view-all-lessons" class="bg-transparent border border-yellow-500 text-yellow-500 px-8 py-3 rounded-lg hover:bg-yellow-500 hover:text-black transition">View All Lesson Plans</button>
+        </div>
+    </div>
+</section>
+
+<!-- Lesson Plan Modal -->
+<div id="lessonModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center hidden z-50">
+    <div class="bg-[#2e3130] text-white p-8 rounded-lg w-full max-w-2xl shadow-lg relative max-h-[80vh] overflow-y-auto">
+        <button id="closeLessonModal" class="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl">×</button>
+        <h2 id="modalTitle" class="text-2xl font-bold mb-4"></h2>
+        <div id="modalContent" class="text-gray-300"></div>
+    </div>
+</div>
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+    
+<!-- Teacher Guides Section -->
+<section id="teacher-guides" class="py-20 px-6 md:px-16 bg-[#0d0d0d]" data-aos="fade-up">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold mb-12 text-center">Teacher Implementation Guides</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Guide 1 -->
+            <div class="bg-[#171918] p-8 rounded-lg flex flex-col md:flex-row items-center gap-6 hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-book text-2xl text-black"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Getting Started with Earth Science RPG</h3>
+                    <p class="text-gray-400 mb-4">A comprehensive guide to implementing the RPG game in your classroom, including technical setup and student onboarding.</p>
+                    <a href="#" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                        Download Guide (PDF) <i class="fas fa-download ml-2"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Guide 2 -->
+            <div class="bg-[#171918] p-8 rounded-lg flex flex-col md:flex-row items-center gap-6 hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-tasks text-2xl text-black"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Assessment & Progress Tracking</h3>
+                    <p class="text-gray-400 mb-4">Learn how to monitor student progress, evaluate learning outcomes, and integrate game achievements with traditional assessment methods.</p>
+                    <a href="#" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                        Download Guide (PDF) <i class="fas fa-download ml-2"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Guide 3 -->
+            <div class="bg-[#171918] p-8 rounded-lg flex flex-col md:flex-row items-center gap-6 hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-users text-2xl text-black"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Collaborative Learning Strategies</h3>
+                    <p class="text-gray-400 mb-4">Strategies for facilitating group play, team challenges, and peer learning through the Earth Science RPG platform.</p>
+                    <a href="#" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                        Download Guide (PDF) <i class="fas fa-download ml-2"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Guide 4 -->
+            <div class="bg-[#171918] p-8 rounded-lg flex flex-col md:flex-row items-center gap-6 hover:shadow-lg hover:shadow-yellow-500/20 transition duration-300">
+                <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-graduation-cap text-2xl text-black"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-2">Custom Content Creation</h3>
+                    <p class="text-gray-400 mb-4">Guide to creating your own quizzes, challenges, and custom content to adapt the game to your specific curriculum needs.</p>
+                    <a href="#" class="text-yellow-500 hover:text-yellow-400 flex items-center">
+                        Download Guide (PDF) <i class="fas fa-download ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+
+<!-- Quiz Question Bank -->
+<section id="quiz-bank" class="py-20 px-6 md:px-16" data-aos="fade-up">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold mb-4 text-center">Earth Science Quiz Question Bank</h2>
+        <p class="text-gray-400 mb-12 text-center max-w-3xl mx-auto">Access our extensive collection of quiz questions organized by topic. These questions are used within the RPG game and can also be used for additional classroom activities.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Topic 1 -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden border border-gray-800 hover:border-yellow-500 transition duration-300">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-3 flex items-center">
+                        <i class="fas fa-mountain text-yellow-500 mr-3"></i>
+                        Geologic Processes
+                    </h3>
+                    <p class="text-gray-400 mb-4">150+ questions on weathering, erosion, deposition, and mountain formation.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Grade 6-12</span>
+                        <a href="#" class="text-yellow-500 hover:text-yellow-400 font-medium">View Questions</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Topic 2 -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden border border-gray-800 hover:border-yellow-500 transition duration-300">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-3 flex items-center">
+                        <i class="fas fa-meteor text-yellow-500 mr-3"></i>
+                        Rocks & Minerals
+                    </h3>
+                    <p class="text-gray-400 mb-4">120+ questions on rock types, mineral identification, and the rock cycle.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Grade 3-8</span>
+                        <a href="#" class="text-yellow-500 hover:text-yellow-400 font-medium">View Questions</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Topic 3 -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden border border-gray-800 hover:border-yellow-500 transition duration-300">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-3 flex items-center">
+                        <i class="fas fa-cloud-showers-heavy text-yellow-500 mr-3"></i>
+                        Weather Systems
+                    </h3>
+                    <p class="text-gray-400 mb-4">200+ questions on fronts, pressure systems, weather prediction, and severe weather.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Grade 4-10</span>
+                        <a href="#" class="text-yellow-500 hover:text-yellow-400 font-medium">View Questions</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Topic 4 -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden border border-gray-800 hover:border-yellow-500 transition duration-300">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-3 flex items-center">
+                        <i class="fas fa-globe-americas text-yellow-500 mr-3"></i>
+                        Plate Tectonics
+                    </h3>
+                    <p class="text-gray-400 mb-4">180+ questions on continental drift, seafloor spreading, and tectonic boundaries.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Grade 6-12</span>
+                        <a href="#" class="text-yellow-500 hover:text-yellow-400 font-medium">View Questions</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Topic 5 -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden border border-gray-800 hover:border-yellow-500 transition duration-300">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-3 flex items-center">
+                        <i class="fas fa-water text-yellow-500 mr-3"></i>
+                        Oceanography
+                    </h3>
+                    <p class="text-gray-400 mb-4">160+ questions on ocean currents, marine ecosystems, and coastal processes.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Grade 5-12</span>
+                        <a href="#" class="text-yellow-500 hover:text-yellow-400 font-medium">View Questions</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Topic 6 -->
+            <div class="bg-[#171918] rounded-lg overflow-hidden border border-gray-800 hover:border-yellow-500 transition duration-300">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-3 flex items-center">
+                        <i class="fas fa-temperature-high text-yellow-500 mr-3"></i>
+                        Climate Change
+                    </h3>
+                    <p class="text-gray-400 mb-4">140+ questions on global warming, carbon cycle, and environmental impacts.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Grade 7-12</span>
+                        <a href="#" class="text-yellow-500 hover:text-yellow-400 font-medium">View Questions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-12 text-center">
+            <a href="#" class="bg-yellow-500 text-black px-8 py-3 rounded-lg hover:bg-yellow-600 transition">Browse Complete Question Bank</a>
+        </div>
+    </div>
+</section>
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+
+
+<!------------------------------------------------------------------------------------------------------------------------------------------------->
+
+<!-- Footer -->
+<footer class="py-40" style="background: linear-gradient(to top, #000000, #000000 60%, #414141 100%);" data-aos="fade-up">
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm">
+        <div>
+            <img alt="TPL Logo" src="Assets/Group 17.png" class="w-12 h-12 mb-4">
+            <h3 class="text-lg font-bold text-yellow-500 mb-2">The Periodic Legends</h3>
+            <p class="mb-4 text-gray-400">Earth science adventure learning platform</p>
+        </div>
+        <div>
+            <h3 class="mb-4 font-bold">GET STARTED</h3>
+            <ul>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Web Version</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Windows Download</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">macOS Download</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Student Login</a></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="mb-4 font-bold">COMPANY</h3>
+            <ul>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">About Us</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Careers</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Contact</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Blog</a></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="mb-4 font-bold">RESOURCES</h3>
+            <ul>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Help Center</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Privacy Policy</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">Terms of Service</a></li>
+                <li class="mb-2"><a class="text-white hover:text-yellow-300" href="#">For Teachers</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-800 text-center">
+        <p class="text-gray-500">© 2025 The Periodic Legends. All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+
+<script>
+        AOS.init({
+            duration: 1200, // Animation duration in milliseconds
+            once: false, // Animation occurs repeatedly
+            easing: 'ease-in-out', // Animation easing style
+        });
+
+        // Password toggle functionality for unified form
+        const userPasswordInput = document.getElementById('user-password');
+        const togglePasswordIcon = document.getElementById('togglePassword');
+        
+        if (togglePasswordIcon && userPasswordInput) {
+            togglePasswordIcon.addEventListener('click', function() {
+                const type = userPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                userPasswordInput.setAttribute('type', type);
+                
+                // Toggle eye icon
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        //Transparent nav bar on scroll
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.style.opacity = '0.7'; // Lower opacity when scrolling
+            } else {
+                navbar.style.opacity = '1'; // Full opacity at the top
+            }
+        });
+        
+        //Mobile Menu toggle button
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.remove('translate-x-full');
+        });
+        document.getElementById('menu-close').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.add('translate-x-full');
+        });
+
+        //Sign in pop up
+        function toggleModal(show) {
+            const modal = document.getElementById('signInModal');
+            if (modal) {
+                modal.classList.toggle('hidden', !show);
+            }
+        }
+
+        // Footer modal functionality
+        function openFooterModal(title, content) {
+            const modal = document.getElementById('footerModals');
+            const modalContent = document.getElementById('modalContent');
+            
+            if (!modal || !modalContent) {
+                console.warn('Footer modal container is missing on this page.');
+                return;
+            }
+            
+            modalContent.innerHTML = `
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-yellow-400">${title}</h2>
+                        <button id="closeFooterModal" class="text-white text-2xl hover:text-yellow-300">&times;</button>
+                    </div>
+                    <div class="text-gray-200">${content}</div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="close-footer-btn bg-yellow-500 text-black px-6 py-2 rounded hover:bg-yellow-600">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+
+            // Attach event listener to the dynamically created close button
+            const closeButton = modalContent.querySelector('#closeFooterModal');
+            const footerCloseButton = modalContent.querySelector('.close-footer-btn');
+            
+            if (closeButton) {
+                closeButton.addEventListener('click', closeFooterModal);
+            }
+            if (footerCloseButton) {
+                footerCloseButton.addEventListener('click', closeFooterModal);
+            }
+        }
+
+        function closeFooterModal() {
+            const modal = document.getElementById('footerModals');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Footer link handlers
+        const footerLinks = document.querySelectorAll('footer a[href="#"]');
+        footerLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const linkText = this.textContent.trim().toLowerCase();
+                
+                const footerContent = {
+                    'web analytics': `
+                        <div class="space-y-4">
+                            <p><strong>Web Analytics Dashboard</strong></p>
+                            <p>Access real-time analytics for tracking student progress and engagement in Earth Science, designed for teachers at Caloocan High School.</p>
+                            <div class="bg-[#171819] p-4 rounded-lg">
+                                <h4 class="text-yellow-400 mb-2">Features:</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li>Monitor individual student quiz performance</li>
+                                    <li>Track quest completion rates</li>
+                                    <li>View class-wide engagement metrics</li>
+                                    <li>Customize interventions based on data</li>
+                                </ul>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-4">Requires: Latest Chrome, Firefox, or Edge browser, 5 Mbps internet, 1366x768 resolution</p>
+                        </div>
+                    `,
+                    'android download': `
+                        <div class="space-y-4">
+                            <p><strong>Android Mobile App</strong></p>
+                            <p>Download The Periodic Legends for Android to engage in Earth Science adventures through interactive gameplay.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h4 class="text-yellow-400">System Requirements</h4>
+                                    <ul class="text-sm mt-2 space-y-1">
+                                        <li>Android 8.0 (API 26) or higher</li>
+                                        <li>Quad-core 1.5 GHz processor</li>
+                                        <li>2 GB RAM</li>
+                                        <li>200 MB free storage</li>
+                                        <li>720x1280 resolution</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h4 class="text-yellow-400">Features</h4>
+                                    <ul class="text-sm mt-2 space-y-1">
+                                        <li>Curriculum-aligned quests</li>
+                                        <li>Interactive quizzes</li>
+                                        <li>Turn-based combat system</li>
+                                        <li>Progress syncing with web analytics</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400">Version 1.2.3 | Requires stable internet for login and syncing</p>
+                        </div>
+                    `,
+                    'student login': `
+                        <div class="space-y-4">
+                            <p><strong>Student Portal Access</strong></p>
+                            <p>Login to access your personalized Earth Science learning dashboard, designed for GAS students at Caloocan High School.</p>
+                            <div class="bg-green-900/20 border border-green-500/30 p-4 rounded-lg">
+                                <h4 class="text-green-400 mb-2">Quick Access:</h4>
+                                <button onclick="document.getElementById('signInBtn').click();" class="bg-green-500 text-black px-4 py-2 rounded hover:bg-green-600 mr-2">
+                                    Student Login
+                                </button>
+                                <p class="text-sm mt-2">Use your Student ID and password to access:</p>
+                                <ul class="list-disc list-inside text-sm text-gray-300 mt-1">
+                                    <li>Personalized Earth Science quests</li>
+                                    <li>Quiz performance tracking</li>
+                                    <li>Interactive learning modules</li>
+                                    <li>Reward system for progress</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    'about us': `
+                        <div class="space-y-4">
+                            <p><strong>About The Periodic Legends</strong></p>
+                            <p>Developed by Elevate Studio, TPL is a turn-based RPG mobile app designed to enhance Earth Science education for General Academic Strand students at Caloocan High School.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Our Mission</h4>
+                                    <p class="text-sm">Increase student engagement and comprehension in Earth Science through gamified learning, aligned with the Philippine K-12 curriculum.</p>
+                                </div>
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Founded</h4>
+                                    <p class="text-sm">2023 • STI College Caloocan</p>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    'contact': `
+                        <div class="space-y-4">
+                            <p><strong>Contact Us</strong></p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="text-yellow-400 mb-2">Support</h4>
+                                    <p>support@periodiclegends.com</p>
+                                    <p>+63 (912) 345-6789</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-yellow-400 mb-2">School Inquiries</h4>
+                                    <p>admin@periodiclegends.com</p>
+                                    <p>Caloocan High School partnerships</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 space-y-3">
+                                <input type="text" placeholder="Your email" class="w-full p-2 bg-[#171819] rounded">
+                                <textarea placeholder="Your message" rows="3" class="w-full p-2 bg-[#171819] rounded"></textarea>
+                                <button type="button" class="bg-yellow-500 text-black px-6 py-2 rounded hover:bg-yellow-600">
+                                    Send Message
+                                </button>
+                            </div>
+                        </div>
+                    `,
+                    'blog': `
+                        <div class="space-y-4">
+                            <p><strong>TPL Updates</strong></p>
+                            <div class="space-y-3">
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h5 class="text-yellow-400">New Geology Quests</h5>
+                                    <p class="text-sm text-gray-300">Explore rock formations and plate tectonics in our latest update for GAS students.</p>
+                                    <p class="text-xs text-gray-500">April 10, 2025</p>
+                                </div>
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h5 class="text-yellow-400">Teacher Analytics Launched</h5>
+                                    <p class="text-sm text-gray-300">Track student progress with our new web-based dashboard.</p>
+                                    <p class="text-xs text-gray-500">March 20, 2025</p>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    'help center': `
+                        <div class="space-y-4">
+                            <p><strong>Help & Support</strong></p>
+                            <p>Find solutions for using The Periodic Legends at Caloocan High School.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Getting Started</h4>
+                                    <ul class="text-sm space-y-1">
+                                        <li>Download and install the Android app</li>
+                                        <li>Register with your Student ID</li>
+                                        <li>Navigate the main menu and start quests</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-[#171819] p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Troubleshooting</h4>
+                                    <ul class="text-sm space-y-1">
+                                        <li>Login issues: Check internet and credentials</li>
+                                        <li>Quiz sync errors: Ensure stable Wi-Fi</li>
+                                        <li>Contact support for app crashes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="text-sm">For detailed guides, contact support@periodiclegends.com</p>
+                        </div>
+                    `,
+                    'privacy policy': `
+                        <div class="space-y-4 prose prose-invert max-w-none">
+                            <h3>Privacy Policy</h3>
+                            <p>The Periodic Legends respects your privacy and is committed to protecting personal data of GAS students and teachers at Caloocan High School.</p>
+                            <h4>Data We Collect</h4>
+                            <ul>
+                                <li>Student ID and name</li>
+                                <li>Quiz performance and quest progress</li>
+                                <li>Device information (e.g., Android version)</li>
+                                <li>Usage analytics for educational insights</li>
+                            </ul>
+                            <h4>How We Use Data</h4>
+                            <p>Data is used to track learning progress, provide personalized feedback, and improve the app. No data is shared with third parties except for educational purposes within Caloocan High School.</p>
+                            <p><strong>Last updated:</strong> April 2025</p>
+                        </div>
+                    `,
+                    'terms of service': `
+                        <div class="space-y-4">
+                            <h3 class="text-yellow-400">Terms of Service</h3>
+                            <p>By using The Periodic Legends, you agree to these terms for educational use at Caloocan High School.</p>
+                            <div class="bg-[#171819] p-3 rounded-lg">
+                                <h4 class="text-yellow-400 mb-2">Key Terms:</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li>For GAS students and teachers only</li>
+                                    <li>No commercial use or redistribution</li>
+                                    <li>Requires internet for full functionality</li>
+                                    <li>Account termination for misuse</li>
+                                </ul>
+                            </div>
+                            <p class="text-sm">Contact admin@periodiclegends.com for inquiries.</p>
+                        </div>
+                    `
+                };
+                
+                let content = '<p class="text-gray-400">Content not available yet.</p>';
+                for (const [key, value] of Object.entries(footerContent)) {
+                    if (linkText.includes(key)) {
+                        content = value;
+                        break;
+                    }
+                }
+                
+                openFooterModal(this.textContent.trim(), content);
+            });
+        });
+
+        // Close footer modal on click outside
+        const footerModalsElement = document.getElementById('footerModals');
+        if (footerModalsElement) {
+            footerModalsElement.addEventListener('click', function(e) {
+                if (e.target.id === 'footerModals') {
+                    closeFooterModal();
+                }
+            });
+        }
+
+        // Lesson card visibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const lessonCards = document.querySelectorAll('.lesson-card');
+            lessonCards.forEach((card, index) => {
+                if (index < 6) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+
+        //Sign in open and close
+        document.addEventListener('DOMContentLoaded', function() {
+            const signInBtn = document.getElementById('signInBtn');
+            const signInMobileBtn = document.getElementById('signInMobileBtn');
+            const closeModal = document.getElementById('closeModal');
+            const signInModal = document.getElementById('signInModal');
+            
+            if (signInBtn) {
+                signInBtn.addEventListener('click', () => toggleModal(true));
+            }
+            if (signInMobileBtn) {
+                signInMobileBtn.addEventListener('click', () => toggleModal(true));
+            }
+            if (closeModal) {
+                closeModal.addEventListener('click', () => toggleModal(false));
+            }
+            if (signInModal) {
+                signInModal.addEventListener('click', function(event) {
+                    if (event.target === this) {
+                        toggleModal(false);
+                    }
+                });
+            }
+        });
+
+        // Restrict ID input to only 6 numbers
+        const userIdInput = document.getElementById('user-id');
+        if (userIdInput) {
+            userIdInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length > 6) {
+                    this.value = this.value.slice(0, 6);
+                }
+            });
+
+            userIdInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const numbersOnly = paste.replace(/[^0-9]/g, '').slice(0, 6);
+                this.value = numbersOnly;
+            });
+        }
+
+        // Initialize Supabase Client
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(
+                'https://kckasgowvaguzkdlpdyw.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+            );
+            console.log("Supabase initialized:");
+        } catch (err) {
+            console.error("Supabase initialization failed:", err);
+        }
+
+        const unifiedSignInBtn = document.getElementById('unifiedSignInBtn');
+        if (unifiedSignInBtn) {
+            unifiedSignInBtn.addEventListener('click', loginUnified);
+        }
+
+        // ✅ Unified Login Function (students & teachers)
+        async function loginUnified() {
+            const userId = document.getElementById("user-id")?.value?.trim() || "";
+            const password = document.getElementById("user-password")?.value;
+            const messageBox = document.getElementById("message");
+
+            if (!messageBox) {
+                console.error("Message box not found");
+                return;
+            }
+
+            if (!userId || userId.length !== 6 || !/^[0-9]{6}$/.test(userId)) {
+                messageBox.textContent = "⚠️ ID must be exactly 6 numbers.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+                return;
+            }
+
+            if (!userId || !password) {
+                messageBox.textContent = "⚠️ Please enter both ID and Password.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+                return;
+            }
+
+            if (!supabase) {
+                messageBox.textContent = "⚠️ Database connection not initialized.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+                console.error("Supabase client not initialized");
+                return;
+            }
+
+            try {
+                // Try student table first
+                let { data: studentData, error: studentError } = await supabase
+                    .from("student")
+                    .select("student_id, full_name, password, password_salt")
+                    .eq("student_id", userId)
+                    .single();
+
+                if (!studentError && studentData) {
+                    const hashedInputPassword = await hashPassword(password, studentData.password_salt);
+                    if (hashedInputPassword === studentData.password) {
+                        messageBox.textContent = "✅ Login Successful! Redirecting...";
+                        messageBox.classList.remove("text-red-500");
+                        messageBox.classList.add("text-green-500");
+
+                        const firstName = studentData.full_name.split(" ")[0];
+                        localStorage.setItem("studentId", studentData.student_id);
+                        localStorage.setItem("studentFirstName", firstName);
+
+                        setTimeout(() => {
+                            window.location.href = "Student_Dashboard.html";
+                        }, 1500);
+                        return;
+                    }
+                }
+
+                // Fallback to teacher table
+                let { data: teacherData, error: teacherError } = await supabase
+                    .from("teacher")
+                    .select("teacher_id, full_name, password, password_salt")
+                    .eq("teacher_id", userId)
+                    .single();
+
+                if (!teacherError && teacherData) {
+                    const hashedInputPassword = await hashPassword(password, teacherData.password_salt);
+                    if (hashedInputPassword === teacherData.password) {
+                        messageBox.textContent = "✅ Login Successful! Redirecting...";
+                        messageBox.classList.remove("text-red-500");
+                        messageBox.classList.add("text-green-500");
+
+                        const firstName = teacherData.full_name.split(" ")[0];
+                        localStorage.setItem("teacherId", teacherData.teacher_id);
+                        localStorage.setItem("teacherFirstName", firstName);
+
+                        setTimeout(() => {
+                            window.location.href = "Teacher_Dashboard.html";
+                        }, 1500);
+                        return;
+                    }
+                }
+
+                messageBox.textContent = "❌ Invalid ID or Password.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+            } catch (err) {
+                console.error("Login Error:", err);
+                messageBox.textContent = "⚠️ An error occurred. Please try again later.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+            }
+        }
+
+        // 🔐 Function to Hash Password with Salt (SHA-256)
+        async function hashPassword(password, salt) {
+            const encoder = new TextEncoder();
+            const saltedPassword = password + salt;
+            const data = encoder.encode(saltedPassword);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(byte => byte.toString(16).padStart(2, "0"))
+                .join("");
+        }
+
+        // Lesson plan modal content
+const lessonContent = {
+    'stratified-rocks': {
+        title: "Formation of Stratified Rocks",
+        content: `
+            <p><strong>Date:</strong> Aug 12-16, 2024</p>
+            <p><strong>Objectives:</strong> Describe how layers of rocks (stratified rocks) are formed.</p>
+            <p><strong>Activity:</strong> "Grandmother’s Photo Album Analogy" - Students discuss how fossils in rock layers are like photos in an album, representing Earth's history.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Fossils: Remains or imprints of organisms preserved in sedimentary rocks.</li>
+                <li>Stratification: The process of layering rocks, formed particle by particle, bed by bed.</li>
+                <li>Stratigraphic Laws: Principles like Original Horizontality, Lateral Continuity, Superposition, Cross Cutting, Law of Inclusions, and Law of Faunal Succession.</li>
+                <li>Correlation: Matching rock layers across different locations using rock types, index fossils, or bedrock.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q1_WEEK2_LESSON2.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'subsystems': {
+        title: "Earth’s Subsystems Quest",
+        content: `
+            <p><strong>Date:</strong> Aug 19-23, 2024</p>
+            <p><strong>Objectives:</strong> Explain that the Earth consists of four subsystems (atmosphere, geosphere, hydrosphere, biosphere) across whose boundaries matter and energy flow. Differentiate among these subsystems.</p>
+            <p><strong>Activity:</strong> "Order Please!" - A role-playing activity simulating a fast-food restaurant to demonstrate system interactions.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Atmosphere: Gaseous layer (78% nitrogen, 21% oxygen) that traps heat and protects from UV rays and meteors.</li>
+                <li>Hydrosphere: 70% of Earth’s surface, mostly saltwater (97% oceans, 3% freshwater).</li>
+                <li>Geosphere: Includes crust, mantle, and core, with heat from radioactive decay driving geothermal energy.</li>
+                <li>Biosphere: All living organisms and ecosystems, contributing to atmospheric composition.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q1_WEEK3_LESSON3.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'rock-cycle': {
+        title: "Rock Cycle Chronicles",
+        content: `
+            <p><strong>Date:</strong> Aug 27-30, 2024</p>
+            <p><strong>Objectives:</strong> Identify and differentiate igneous, sedimentary, and metamorphic rocks. Describe their origin and formation environments.</p>
+            <p><strong>Activity:</strong> "Chunks of Cookie" - Students extract chocolate chips from cookies to simulate mineral crystal collection.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Igneous Rocks: Formed from cooled molten rock (extrusive or intrusive).</li>
+                <li>Sedimentary Rocks: Formed by accumulation, compaction, and cementation of rock fragments.</li>
+                <li>Metamorphic Rocks: Formed by changes due to heat, pressure, or chemically active fluids.</li>
+                <li>Rock Cycle: Processes of weathering, erosion, and transformation between rock types.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q1_WEEK4_LESSON4.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'internal-heat': {
+        title: "Core Heat Expedition",
+        content: `
+            <p><strong>Date:</strong> Sept 2-13, 2024</p>
+            <p><strong>Objectives:</strong> Describe where Earth’s internal heat comes from and how magma is formed (magmatism).</p>
+            <p><strong>Activity:</strong> "Moving Molecules" - Observe molecular movement in hot, room temperature, and cold water using food coloring.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Heat Sources: Accretional heat, differentiation (frictional) heat, radioactive decay.</li>
+                <li>Magma Formation: Melting of rocks due to high temperature and pressure.</li>
+                <li>Endogenic Processes: Geological processes driven by internal energy.</li>
+                <li>Magma: A mixture of liquid rock, minerals, and dissolved gases.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q1_WEEK5_LESSON5.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'metamorphism': {
+        title: "Metamorphism Journey",
+        content: `
+            <p><strong>Date:</strong> Sept 16-20, 2024</p>
+            <p><strong>Objectives:</strong> Explain metamorphic grade, distinguish prograde and retrograde metamorphism, and differentiate types of metamorphism.</p>
+            <p><strong>Activity:</strong> "Crayon Art" - Simulate metamorphism by applying heat and pressure to crayon shavings.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Metamorphic Grade: Degree of temperature and pressure affecting rocks (200–1000°C, 300–1800 MPa).</li>
+                <li>Regional Metamorphism: Driven by pressure, leading to plastic rock properties.</li>
+                <li>Contact Metamorphism: Driven by temperature, causing mineral enrichment.</li>
+                <li>Mineralization: Alteration of rock composition under geologic stress, forming crystals or gemstones.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q1_WEEK7_LESSON7.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'origin-of-life': {
+        title: "The Beginning of Life on Earth",
+        content: `
+            <p><strong>Date:</strong> Sep 30 - Oct 4, 2025</p>
+            <p><strong>Objectives:</strong> Enumerate theories that explain how life emerged on Earth and explain how life formed and evolved.</p>
+            <p><strong>Activity:</strong> Discuss and compare theories like Special Creation, Abiogenesis, Biogenesis, Oparin-Haldane, Miller-Urey, Coacervate, and Panspermia.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Characteristics of Life: Response to environment, growth, reproduction, metabolism, homeostasis, and cellular structure.</li>
+                <li>Oparin-Haldane Hypothesis: Life from inorganic substances with natural forces like lightning.</li>
+                <li>Miller-Urey Experiment: Produced amino acids in a simulated early Earth environment.</li>
+                <li>Panspermia Theory: Life may have originated from extraterrestrial sources.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_1_LESSON1.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'unifying-themes': {
+        title: "Unifying Themes: Cell as the Basic Unit",
+        content: `
+            <p><strong>Date:</strong> Oct 7-11, 2025</p>
+            <p><strong>Objectives:</strong> Describe how unifying themes like structure, function, evolution, and ecosystems show connections among living things and explain how cells carry out life functions.</p>
+            <p><strong>Activity:</strong> "Cell Factory" - Draw a factory to represent cell organelles and their functions.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Cell Theory: All living organisms are composed of cells, the basic unit of life.</li>
+                <li>Organelles: Nucleus (control center), mitochondria (ATP production), Golgi apparatus (protein packaging), and others.</li>
+                <li>Unifying Themes: Structure-function relationships, homeostasis, and evolution drive life’s diversity.</li>
+                <li>Ecosystems: Interactions between biotic (living) and abiotic (non-living) factors.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_2_LESSON2.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'animal-reproduction': {
+        title: "Animal Reproduction",
+        content: `
+            <p><strong>Date:</strong> Oct 14-18, 2025</p>
+            <p><strong>Objectives:</strong> Understand the mechanisms of asexual reproduction and identify different forms of asexual and sexual reproduction in animals.</p>
+            <p><strong>Activity:</strong> Analyze examples of fission, budding, fragmentation, and parthenogenesis in various species.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Asexual Reproduction: Includes fission, budding, fragmentation, and parthenogenesis; produces genetically identical offspring.</li>
+                <li>Sexual Reproduction: Involves fertilization (internal or external) to produce genetically diverse offspring.</li>
+                <li>Reproductive Strategies: Oviparity, ovoviviparity, and viviparity in animals.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_3_LESSON3.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'genetic-engineering': {
+        title: "Genetic Engineering",
+        content: `
+            <p><strong>Date:</strong> Oct 21-31, 2025</p>
+            <p><strong>Objectives:</strong> Introduce the concept of genetic engineering, describe its history, and explain its processes.</p>
+            <p><strong>Activity:</strong> Discuss the development of transgenic bacteria and simulate DNA manipulation techniques.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Genetic Engineering: Direct manipulation of genes using biotechnology.</li>
+                <li>History: First transgenesis by Boyer and Cohen (1972); insulin-producing bacteria.</li>
+                <li>Recombinant DNA: Uses restriction enzymes to splice and insert genetic sequences.</li>
+                <li>Techniques: Selective breeding, hybridization, inbreeding, and genetic mutation.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_4_LESSON4.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'animal-survival': {
+        title: "How Animals Survive",
+        content: `
+            <p><strong>Date:</strong> Nov 4-8, 2025</p>
+            <p><strong>Objectives:</strong> Explain the process of digestion and the role of various organ systems in animal survival.</p>
+            <p><strong>Activity:</strong> Model digestion and circulation processes using interactive simulations.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Digestive System: Ingestion, digestion, absorption, and egestion in animals.</li>
+                <li>Circulatory System: Open (invertebrates) and closed (vertebrates) systems for nutrient transport.</li>
+                <li>Respiratory System: Gills, lungs, and tracheal systems for gas exchange.</li>
+                <li>Homeostasis: Maintaining stable internal conditions for survival.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_6_LESSON6.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'organism-change': {
+        title: "How Organisms Change",
+        content: `
+            <p><strong>Date:</strong> Nov 18-22, 2025</p>
+            <p><strong>Objectives:</strong> Explain how populations change over time through evolution and adaptation.</p>
+            <p><strong>Activity:</strong> Design a poster tracing evolutionary changes in a crop plant.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Evolution: Change in inherited characteristics over time via natural selection.</li>
+                <li>Adaptation: Behavioral and physical changes increasing fitness.</li>
+                <li>Common Descent: Species evolve from shared ancestors, leading to diversity.</li>
+                <li>Artificial Selection: Human-driven reproduction to enhance desired traits.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_8_LESSON7.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    },
+    'biotic-potential': {
+        title: "Biotic Potential and Environmental Resistance",
+        content: `
+            <p><strong>Date:</strong> Dec 2-7, 2025</p>
+            <p><strong>Objectives:</strong> Explain biotic potential and its importance in population dynamics.</p>
+            <p><strong>Activity:</strong> Analyze factors like food availability and predators affecting population growth.</p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul class="list-disc pl-5">
+                <li>Biotic Potential: Ability of a population to grow under ideal conditions.</li>
+                <li>Environmental Resistance: Factors like diseases and resource scarcity limiting growth.</li>
+                <li>Carrying Capacity: Maximum population size an environment can support.</li>
+                <li>Population Growth: Exponential (J-curve) vs. logistic (S-curve) patterns.</li>
+            </ul>
+            <p><strong>Download:</strong> <a href="https://2s07cnnaoloopc0e.public.blob.vercel-storage.com/Q2_WEEK_9_LESSON8.docx" class="text-yellow-500 hover:text-yellow-400" download>Lesson Plan PDF</a></p>
+        `
+    }
+};
+
+// Lesson modal toggle
+document.querySelectorAll('.view-lesson').forEach(button => {
+    button.addEventListener('click', function() {
+        const lesson = this.dataset.lesson;
+        const modal = document.getElementById('lessonModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        
+        modalTitle.textContent = lessonContent[lesson].title;
+        modalContent.innerHTML = lessonContent[lesson].content;
+        modal.classList.remove('hidden');
+    });
+});
+
+document.getElementById('closeLessonModal').addEventListener('click', function() {
+    document.getElementById('lessonModal').classList.add('hidden');
+});
+
+document.getElementById('lessonModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        this.classList.add('hidden');
+    }
+});
+
+// View All Lesson Plans toggle
+document.getElementById('view-all-lessons').addEventListener('click', function(e) {
+    e.preventDefault();
+    const lessonCards = document.querySelectorAll('.lesson-card');
+    const isShowingAll = this.textContent === 'Hide Extra Lesson Plans';
+    
+    lessonCards.forEach((card, index) => {
+        if (isShowingAll) {
+            // Hide cards beyond the first six
+            if (index >= 6) {
+                card.classList.add('hidden');
+            }
+        } else {
+            // Show all cards
+            card.classList.remove('hidden');
+        }
+    });
+    
+    this.textContent = isShowingAll ? 'View All Lesson Plans' : 'Hide Extra Lesson Plans';
+});
+
+
+    // Quiz modal toggle (guards ensure elements exist before binding)
+    const quizModal = document.getElementById('quizModal');
+    const closeQuizModalBtn = document.getElementById('closeQuizModal');
+    const quizModalTitle = document.getElementById('quizModalTitle');
+    const quizModalContent = document.getElementById('quizModalContent');
+    const quizButtons = document.querySelectorAll('.view-quiz');
+    const hasQuizData = typeof quizContent !== 'undefined';
+
+    if (quizModal && closeQuizModalBtn && quizModalTitle && quizModalContent && hasQuizData) {
+        quizButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const quiz = this.dataset.quiz;
+                const quizInfo = quizContent[quiz];
+
+                if (!quizInfo) {
+                    console.warn(`Quiz content not found for key: ${quiz}`);
+                    return;
+                }
+
+                quizModalTitle.textContent = quizInfo.title;
+                quizModalContent.innerHTML = quizInfo.content;
+                quizModal.classList.remove('hidden');
+            });
+        });
+
+        closeQuizModalBtn.addEventListener('click', function() {
+            quizModal.classList.add('hidden');
+        });
+
+        quizModal.addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    }
+</script>
+</html>

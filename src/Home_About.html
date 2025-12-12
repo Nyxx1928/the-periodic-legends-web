@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>About</title>
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind configuration for glassmorphism and animations -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    backdropBlur: {
+                        xs: '2px',
+                        sm: '4px',
+                        md: '8px',
+                    },
+                    backgroundOpacity: {
+                        10: '0.1',
+                        15: '0.15',
+                    },
+                    borderOpacity: {
+                        20: '0.2',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px rgba(234, 179, 8, 0.3)' },
+                            '50%': { boxShadow: '0 0 20px rgba(234, 179, 8, 0.6)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(50px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)', opacity: '0.7' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    },
+                    animation: {
+                        pulseGlow: 'pulseGlow 2s ease-in-out infinite',
+                        slideUp: 'slideUp 0.6s ease-out',
+                        bounceIn: 'bounceIn 0.5s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Supabase JS client for database/auth integration -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- Font Awesome for icon fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <!-- Google Fonts: Inter for modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS (Animate On Scroll) CSS for scroll animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"/>
+    <!-- AOS JS for scroll-triggered animations -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <!-- Local config file for environment-specific settings -->
+    <script src="/config.local.js"></script>
+    <!-- Enhanced Modal and Animation Styling -->
+    <style>
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        #signInModal {
+            z-index: 50;
+        }
+        #signInModal > div {
+            animation: bounceIn 0.5s ease-out;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .glass-effect:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.2);
+        }
+        .btn-glow {
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+        }
+        .image-scale {
+            transition: transform 0.3s ease;
+        }
+        .image-scale:hover {
+            transform: scale(1.05);
+        }
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #eab308;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        /* Mobile-specific improvements */
+        @media (max-width: 640px) {
+            #signInModal > div {
+                margin: 1rem;
+            }
+            input[type="text"], input[type="password"] {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white pt-16" style="font-family: 'Inter', sans-serif;" data-aos-easing="ease-out-back" data-aos-duration="800">
+    <!-- Header with Enhanced Glassmorphism -->
+    <header id="navbar" class="glass-effect px-6 py-4 md:px-48 flex justify-between items-center fixed top-0 w-full z-50" data-aos="fade-down" data-aos-duration="600">
+        <div class="flex items-center space-x-4 md:space-x-16">
+            <a href="index.html" class="flex items-center">
+                <img alt="TPL Logo" src="Assets/Group 17.png" class="w-10 h-10 transition-transform duration-300 hover:scale-110">
+                <span class="ml-3 font-bold tracking-wide text-3xl">TPL</span>
+            </a>
+            <nav class="hidden md:flex space-x-6">
+                <a href="index.html" class="hover:text-yellow-300 nav-link">Overview</a>
+                <a href="Home_About.html" class="text-yellow-300 nav-link">About us</a>
+                <a href="Home_Contact.html" class="hover:text-yellow-300 nav-link">Contact</a>
+                <a href="index.html#download" class="hover:text-yellow-300 nav-link">Download</a>
+            </nav>
+        </div>
+        <div class="hidden md:flex space-x-4">
+            <button id="signInBtn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 rounded btn-glow hover:bg-yellow-500 hover:text-black">Sign In</button>
+        </div>
+        <!-- Mobile menu burger -->
+        <button id="menu-toggle" class="md:hidden text-white text-2xl">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+    <!-- Mobile Menu with Enhanced Glassmorphism -->
+    <div id="mobile-menu" class="fixed top-0 right-0 glass-effect w-1/2 h-screen z-50 flex flex-col px-6 py-6 space-y-4 transform translate-x-full transition-transform duration-500 ease-in-out">
+        <button id="menu-close" class="text-white text-2xl self-end">
+            <i class="fas fa-times"></i>
+        </button>
+        <nav class="flex flex-col space-y-4">
+            <a href="index.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Overview</a>
+            <a href="Home_About.html" class="text-lg text-yellow-300 px-4 py-2 rounded-lg transition">About us</a>
+            <a href="Home_Contact.html" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Contact</a>
+            <a href="index.html#download" class="text-lg text-white hover:text-yellow-300 px-4 py-2 rounded-lg transition">Download</a>
+        </nav>
+        <div class="flex justify-center">
+            <button id="signInMobileBtn" class="bg-transparent border border-yellow-500 text-yellow-500 px-4 py-2 mt-12 rounded btn-glow hover:bg-yellow-500 hover:text-black">Sign In</button>
+        </div>
+    </div>
+    <!-- Sign In Modal with Enhanced Glassmorphism -->
+    <div id="signInModal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 p-4">
+        <div class="glass-effect p-6 md:p-8 rounded-lg w-full max-w-sm shadow-lg relative">
+            <button id="closeModal" class="absolute top-3 right-3 text-gray-400 hover:text-yellow-300 text-2xl transition-colors duration-200">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Sign in to TPL</h2>
+            
+            <!-- Unified Form -->
+            <div id="unifiedForm">
+                <input type="text" id="user-id" placeholder="Enter your ID" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" class="w-full mb-2 px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-yellow-500 transition-all duration-300">
+                <div class="relative mb-4">
+                    <input
+                        type="password"
+                        id="user-password"
+                        placeholder="Enter your password"
+                        class="w-full pr-10 px-4 py-2 rounded bg-[#171819] border border-[#202221] focus:ring-2 focus:ring-yellow-500 focus:outline-none text-yellow-500 transition-all duration-300"
+                    >
+                    <i
+                        id="togglePassword"
+                        class="fas fa-eye absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 cursor-pointer"
+                    ></i>
+                </div>
+                <button id="unifiedSignInBtn" class="w-full bg-yellow-500 text-black px-4 py-3 rounded btn-glow hover:bg-yellow-600 min-h-[44px] font-medium">Sign In</button>
+                <p id="message" class="mt-3 text-center text-sm"></p>
+            </div>
+        </div>
+    </div>
+    <!-- Main Content with Enhanced Animations -->
+    <main class="py-8 px-4 sm:px-6 md:px-8 lg:px-48 mt-16 md:mt-24 mb-0 min-h-screen flex items-center" data-aos="fade-up" data-aos-duration="1000">
+        <div class="w-full px-0 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex-1 w-full" data-aos="fade-up-right" data-aos-delay="200">
+                <h1 class="font-semibold -mt-8 md:-mt-20 mb-4 md:mb-6 leading-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-left">
+                    We teach Earth Science<br class="hidden sm:block">
+                    <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">differently here...</span>
+                </h1>
+                <p class="mt-6 md:mt-8 mb-8 md:mb-16 leading-relaxed text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 text-left max-w-2xl" data-aos="fade-down-left" data-aos-delay="400">
+                    As students at STI College Caloocan, we're developing The Periodic Legends (TPL) to make Earth Science engaging for GAS students at Caloocan High School.<br class="hidden sm:block"><br class="hidden sm:block">
+                    Through gamification and analytics, we aim to boost motivation and learning outcomes in resource-limited settings.
+                </p>
+            </div>
+            <div class="mt-6 md:mt-0 md:ml-8 w-full md:w-auto flex justify-center">
+                <img
+                    src="Assets/4.jpg"
+                    alt="Earth Science Adventure"
+                    class="w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 object-cover rounded-2xl shadow-2xl image-scale"
+                    data-aos="fade-up-left" data-aos-delay="600"
+                />
+            </div>
+        </div>
+    </main>
+    <!-- Values Section with Enhanced Glassmorphism -->
+    <section class="text-center py-12 md:py-20 lg:py-40 mt-6" data-aos="fade-up" data-aos-duration="800">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-12 md:mb-20 lg:mb-28 px-4" data-aos="zoom-in-down" data-aos-duration="1000">
+            Led by strong <span class="bg-gradient-to-r from-white via-yellow-100 to-yellow-200 bg-clip-text text-transparent">values</span>
+        </h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12 px-4 sm:px-6 md:px-12 lg:px-24 max-w-7xl mx-auto">
+            <div class="flex flex-col items-start text-justify px-4 sm:px-6 md:px-10 glass-effect p-5 md:p-6 rounded-lg animation-pulseGlow" data-aos="slide-right" data-aos-delay="300">
+                <i class="fas fa-rocket text-yellow-500 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h2 class="text-lg md:text-xl text-left font-semibold mb-2 text-yellow-400">Innovation in Education</h2>
+                <p class="opacity-75 text-sm md:text-base leading-relaxed">We integrate game-based learning to transform traditional Earth Science teaching, fostering engagement and critical thinking.</p>
+            </div>
+            <div class="flex flex-col items-start text-justify px-4 sm:px-6 md:px-10 glass-effect p-5 md:p-6 rounded-lg animation-pulseGlow" data-aos="slide-right" data-aos-delay="200">
+                <i class="fas fa-shield-alt text-yellow-500 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h2 class="text-lg md:text-xl text-left font-semibold mb-2 text-yellow-400">Accessibility for All</h2>
+                <p class="opacity-75 text-sm md:text-base leading-relaxed">Designed for resource-constrained environments like public schools, ensuring reliable access via mobile and web platforms.</p>
+            </div>
+            <div class="flex flex-col items-start text-justify px-4 sm:px-6 md:px-10 glass-effect p-5 md:p-6 rounded-lg animation-pulseGlow" data-aos="slide-right" data-aos-delay="100">
+                <i class="fas fa-chart-line text-yellow-500 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h2 class="text-lg md:text-xl text-left font-semibold mb-2 text-yellow-400">Data-Driven Insights</h2>
+                <p class="opacity-75 text-sm md:text-base leading-relaxed">Web-based analytics help teachers monitor progress and customize lessons for GAS students at Caloocan High School.</p>
+            </div>
+            <div class="flex flex-col items-start text-justify px-4 sm:px-6 md:px-10 glass-effect p-5 md:p-6 rounded-lg animation-pulseGlow" data-aos="slide-left" data-aos-delay="100">
+                <i class="fas fa-seedling text-yellow-500 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h2 class="text-lg md:text-xl text-left font-semibold mb-2 text-yellow-400">Student Growth Focus</h2>
+                <p class="opacity-75 text-sm md:text-base leading-relaxed">Our RPG mechanics encourage problem-solving and retention of Earth Science concepts through interactive gameplay.</p>
+            </div>
+            <div class="flex flex-col items-start text-justify px-4 sm:px-6 md:px-10 glass-effect p-5 md:p-6 rounded-lg animation-pulseGlow" data-aos="slide-left" data-aos-delay="200">
+                <i class="fas fa-cogs text-yellow-500 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h2 class="text-lg md:text-xl text-left font-semibold mb-2 text-yellow-400">Curriculum Alignment</h2>
+                <p class="opacity-75 text-sm md:text-base leading-relaxed">TPL is tailored to the Philippine K-12 Earth Science curriculum, integrating quizzes and combat systems seamlessly.</p>
+            </div>
+            <div class="flex flex-col items-start text-justify px-4 sm:px-6 md:px-10 glass-effect p-5 md:p-6 rounded-lg animation-pulseGlow" data-aos="slide-left" data-aos-delay="300">
+                <i class="fas fa-heart text-yellow-500 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h2 class="text-lg md:text-xl text-left font-semibold mb-2 text-yellow-400">Community-Centric</h2>
+                <p class="opacity-75 text-sm md:text-base leading-relaxed">Developed by BS Computer Science students to support fellow learners and teachers in our local community.</p>
+            </div>    
+        </div>
+    </section>
+    <!-- Team Section with Enhanced Glassmorphism -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 lg:px-24 py-12 md:py-16 lg:py-24" data-aos="fade-up" data-aos-duration="800">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-12 items-center">
+            <div class="relative md:col-span-2 glass-effect rounded-2xl overflow-hidden shadow-2xl group" data-aos="fade-right" data-aos-delay="200">
+                <img src="Assets/1.jpg" alt="Team working in bright office" class="w-full h-auto max-h-[300px] md:max-h-[400px] lg:max-h-[500px] object-cover image-scale"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                <div class="absolute bottom-4 md:bottom-6 lg:bottom-8 left-4 md:left-6 lg:left-8 text-white">
+                    <h3 class="text-xl sm:text-2xl md:text-3xl font-bold mb-2 drop-shadow-lg">Student Developers in Action</h3>
+                    <p class="text-sm sm:text-base md:text-lg opacity-80 drop-shadow-lg mb-2">Our team collaborates on innovative educational tech at STI College Caloocan.</p>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-2">
+                        <span class="inline-flex items-center gap-2 text-yellow-300 font-semibold text-xs sm:text-sm md:text-base">
+                            <i class="fas fa-users"></i> 4 Team Members
+                        </span>
+                        <span class="inline-flex items-center gap-2 text-yellow-300 font-semibold text-xs sm:text-sm md:text-base">
+                            <i class="fas fa-calendar-alt"></i> Est. 2024
+                        </span>
+                    </div>
+                </div>
+                <div class="absolute top-4 md:top-6 lg:top-8 right-4 md:right-6 lg:right-8 bg-yellow-500 text-black px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold shadow-lg text-xs md:text-sm animation-pulseGlow">
+                    Thesis Project
+                </div>
+            </div>
+            <div class="flex flex-col gap-6 md:gap-8 lg:gap-12 h-full">
+                <div class="relative glass-effect rounded-2xl overflow-hidden shadow-2xl group" data-aos="fade-up" data-aos-delay="400">
+                    <img src="Assets/2.jpg" alt="Standing and smiling in office" class="w-full h-auto max-h-[200px] sm:max-h-[220px] md:max-h-[240px] object-cover image-scale"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-4 md:bottom-6 left-4 md:left-6 text-white">
+                        <h4 class="text-lg md:text-xl font-semibold drop-shadow-lg mb-1">Positive Collaboration</h4>
+                        <p class="text-sm md:text-base opacity-80 drop-shadow-lg">We support each other in building TPL for better science education.</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="inline-flex items-center gap-1 text-yellow-300 text-xs md:text-sm">
+                                <i class="fas fa-smile"></i> Student-Led
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative glass-effect rounded-2xl overflow-hidden shadow-2xl group" data-aos="fade-left" data-aos-delay="600">
+                    <img src="Assets/3.jpg" alt="Conversation and smiles in office" class="w-full h-auto max-h-[200px] sm:max-h-[220px] md:max-h-[240px] object-cover image-scale"/>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-4 md:bottom-6 left-4 md:left-6 text-white">
+                        <h4 class="text-lg md:text-xl font-semibold drop-shadow-lg mb-1">Building Connections</h4>
+                        <p class="text-sm md:text-base opacity-80 drop-shadow-lg">Working with advisers and coordinators at STI College Caloocan.</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="inline-flex items-center gap-1 text-yellow-300 text-xs md:text-sm">
+                                <i class="fas fa-link"></i> Academic Partnerships
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-12 md:mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center">
+            <div class="glass-effect rounded-xl shadow-lg py-6 md:py-8 px-4 md:px-6 animation-pulseGlow" data-aos="zoom-in" data-aos-delay="200">
+                <i class="fas fa-award text-yellow-400 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h5 class="font-bold text-lg md:text-xl mb-2">Thesis Proposal</h5>
+                <p class="text-gray-300 mb-2 text-sm md:text-base">Presented for BS Computer Science at STI College Caloocan in 2024.</p>
+                <span class="inline-block bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-semibold">Academic Project</span>
+            </div>
+            <div class="glass-effect rounded-xl shadow-lg py-6 md:py-8 px-4 md:px-6 animation-pulseGlow" data-aos="zoom-in" data-aos-delay="400">
+                <i class="fas fa-globe text-yellow-400 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h5 class="font-bold text-lg md:text-xl mb-2">Local Impact</h5>
+                <p class="text-gray-300 mb-2 text-sm md:text-base">Targeting GAS students and teachers at Caloocan High School.</p>
+                <span class="inline-block bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-semibold">Philippines-Focused</span>
+            </div>
+            <div class="glass-effect rounded-xl shadow-lg py-6 md:py-8 px-4 md:px-6 animation-pulseGlow" data-aos="zoom-in" data-aos-delay="600">
+                <i class="fas fa-lightbulb text-yellow-400 text-2xl md:text-3xl mb-3 md:mb-4"></i>
+                <h5 class="font-bold text-lg md:text-xl mb-2">Creative Education</h5>
+                <p class="text-gray-300 mb-2 text-sm md:text-base">Using RPG elements to teach Earth Science concepts innovatively.</p>
+                <span class="inline-block bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-semibold">Gamification</span>
+            </div>
+        </div>
+    </section>
+    <!-- Footer with Enhanced Glassmorphism -->
+    <footer class="py-16 md:py-40" style="background: linear-gradient(to top, #000000, #000000 60%, #414141 100%);" data-aos="fade-up" data-aos-duration="1000">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-sm">
+            <div>
+                <img alt="TPL Logo" src="Assets/Group 17.png" class="w-12 h-12 mb-4 transition-transform duration-300 hover:scale-110">
+                <h3 class="text-lg font-bold text-yellow-500 mb-2">The Periodic Legends</h3>
+                <p class="mb-4 text-gray-400">Earth science adventure learning platform for GAS students</p>
+            </div>
+            <div>
+                <h3 class="mb-4 font-bold">GET STARTED</h3>
+                <ul class="space-y-2">
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-globe mr-2 text-yellow-400"></i> Web Analytics
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fab fa-android mr-2 text-yellow-400"></i> Android Download
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-user-graduate mr-2 text-yellow-400"></i> Student Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="mb-4 font-bold">TEAM</h3>
+                <ul class="space-y-2">
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-info-circle mr-2 text-yellow-400"></i> About Us
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-envelope mr-2 text-yellow-400"></i> Contact
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-blog mr-2 text-yellow-400"></i> Blog
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="mb-4 font-bold">RESOURCES</h3>
+                <ul class="space-y-2">
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-question-circle mr-2 text-yellow-400"></i> Help Center
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-shield-alt mr-2 text-yellow-400"></i> Privacy Policy
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="#">
+                            <i class="fas fa-file-contract mr-2 text-yellow-400"></i> Terms of Service
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a class="text-white hover:text-yellow-300 flex items-center nav-link" href="Teacher_Registration.html">
+                            <i class="fas fa-chalkboard-teacher mr-2 text-yellow-400"></i> For Teachers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-800 text-center">
+            <p class="text-gray-500">© 2025 The Periodic Legends. All rights reserved.</p>
+        </div>
+    </footer>
+    <!-- Footer Modals -->
+    <div id="footerModals" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 p-4">
+        <div id="modalContent" class="glass-effect rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto"></div>
+    </div>
+    <!-- Scripts -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        AOS.init({
+            duration: 800,
+            once: true,
+            easing: 'ease-out-back',
+            offset: 100,
+        });
+        // Password toggle functionality for unified form
+        const userPasswordInput = document.getElementById('user-password');
+        const togglePasswordIcon = document.getElementById('togglePassword');
+        
+        if (togglePasswordIcon && userPasswordInput) {
+            togglePasswordIcon.addEventListener('click', function() {
+                const type = userPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                userPasswordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Unified sign in button
+        const unifiedSignInBtn = document.getElementById('unifiedSignInBtn');
+        if (unifiedSignInBtn) {
+            unifiedSignInBtn.addEventListener('click', loginUnified);
+        }
+
+        // Restrict user ID input to only 6 numbers
+        const userIdInput = document.getElementById('user-id');
+        if (userIdInput) {
+            userIdInput.addEventListener('input', function(e) {
+                // Remove any non-numeric characters
+                this.value = this.value.replace(/[^0-9]/g, '');
+                // Limit to 6 digits
+                if (this.value.length > 6) {
+                    this.value = this.value.slice(0, 6);
+                }
+            });
+
+            // Prevent paste of non-numeric characters
+            userIdInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const numbersOnly = paste.replace(/[^0-9]/g, '').slice(0, 6);
+                this.value = numbersOnly;
+            });
+        }
+        // Footer modal functionality
+        function openFooterModal(title, content) {
+            const modal = document.getElementById('footerModals');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-yellow-400">${title}</h2>
+                        <button id="closeFooterModal" class="text-white text-2xl hover:text-yellow-300 transition-colors duration-200">&times;</button>
+                    </div>
+                    <div class="text-gray-200">${content}</div>
+                    <div class="mt-6 flex justify-end">
+                        <button class="close-footer-btn bg-yellow-500 text-black px-6 py-2 rounded btn-glow hover:bg-yellow-600">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            // Attach event listener to the dynamically created close button
+            const closeButton = modalContent.querySelector('#closeFooterModal');
+            const footerCloseButton = modalContent.querySelector('.close-footer-btn');
+            
+            if (closeButton) {
+                closeButton.addEventListener('click', closeFooterModal);
+            }
+            if (footerCloseButton) {
+                footerCloseButton.addEventListener('click', closeFooterModal);
+            }
+        }
+        function closeFooterModal() {
+            const modal = document.getElementById('footerModals');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+        // Add event listener for the "Student Login" button in the footer modal
+        document.addEventListener('click', function(event) {
+            if (event.target.closest('button[onclick*="signInBtn"]')) {
+                closeFooterModal();
+                toggleModal(true);
+            }
+        });
+        // Footer link handlers
+        const footerLinks = document.querySelectorAll('footer a[href="#"]');
+        footerLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const linkText = this.textContent.trim().toLowerCase();
+                
+                const footerContent = {
+                    'web analytics': `
+                        <div class="space-y-4">
+                            <p><strong>Web Analytics Dashboard</strong></p>
+                            <p>Access real-time analytics for tracking student progress and engagement in Earth Science, designed for teachers at Caloocan High School.</p>
+                            <div class="glass-effect p-4 rounded-lg">
+                                <h4 class="text-yellow-400 mb-2">Features:</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li>Monitor individual student quiz performance</li>
+                                    <li>Track quest completion rates</li>
+                                    <li>View class-wide engagement metrics</li>
+                                    <li>Customize interventions based on data</li>
+                                </ul>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-4">Requires: Latest Chrome, Firefox, or Edge browser, 5 Mbps internet, 1366x768 resolution</p>
+                        </div>
+                    `,
+                    'android download': `
+                        <div class="space-y-4">
+                            <p><strong>Android Mobile App</strong></p>
+                            <p>Download The Periodic Legends for Android to engage in Earth Science adventures through interactive gameplay.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400">System Requirements</h4>
+                                    <ul class="text-sm mt-2 space-y-1">
+                                        <li>Android 8.0 (API 26) or higher</li>
+                                        <li>Quad-core 1.5 GHz processor</li>
+                                        <li>2 GB RAM</li>
+                                        <li>200 MB free storage</li>
+                                        <li>720x1280 resolution</li>
+                                    </ul>
+                                </div>
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400">Features</h4>
+                                    <ul class="text-sm mt-2 space-y-1">
+                                        <li>Curriculum-aligned quests</li>
+                                        <li>Interactive quizzes</li>
+                                        <li>Turn-based combat system</li>
+                                        <li>Progress syncing with web analytics</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400">Version 1.2.3 | Requires stable internet for login and syncing</p>
+                        </div>
+                    `,
+                    'student login': `
+                        <div class="space-y-4">
+                            <p><strong>Student Portal Access</strong></p>
+                            <p>Login to access your personalized Earth Science learning dashboard, designed for GAS students at Caloocan High School.</p>
+                            <div class="glass-effect p-4 rounded-lg">
+                                <h4 class="text-green-400 mb-2">Quick Access:</h4>
+                                <button onclick="document.getElementById('signInBtn').click();" class="bg-green-500 text-black px-4 py-2 rounded btn-glow hover:bg-green-600 mr-2">
+                                    Student Login
+                                </button>
+                                <p class="text-sm mt-2">Use your Student ID and password to access:</p>
+                                <ul class="list-disc list-inside text-sm text-gray-300 mt-1">
+                                    <li>Personalized Earth Science quests</li>
+                                    <li>Quiz performance tracking</li>
+                                    <li>Interactive learning modules</li>
+                                    <li>Reward system for progress</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    'about us': `
+                        <div class="space-y-4">
+                            <p><strong>About The Periodic Legends</strong></p>
+                            <p>Developed by Elevate Studio, TPL is a turn-based RPG mobile app designed to enhance Earth Science education for General Academic Strand students at Caloocan High School.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Our Mission</h4>
+                                    <p class="text-sm">Increase student engagement and comprehension in Earth Science through gamified learning, aligned with the Philippine K-12 curriculum.</p>
+                                </div>
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Founded</h4>
+                                    <p class="text-sm">2023 • STI College Caloocan</p>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    'contact': `
+                        <div class="space-y-4">
+                            <p><strong>Contact Us</strong></p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="text-yellow-400 mb-2">Support</h4>
+                                    <p>support@periodiclegends.com</p>
+                                    <p>+63 (912) 345-6789</p>
+                                </div>
+                                <div>
+                                    <h4 class="text-yellow-400 mb-2">School Inquiries</h4>
+                                    <p>admin@periodiclegends.com</p>
+                                    <p>Caloocan High School partnerships</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 space-y-3">
+                                <input type="text" placeholder="Your email" class="w-full p-2 glass-effect rounded">
+                                <textarea placeholder="Your message" rows="3" class="w-full p-2 glass-effect rounded"></textarea>
+                                <button type="button" class="bg-yellow-500 text-black px-6 py-2 rounded btn-glow hover:bg-yellow-600">
+                                    Send Message
+                                </button>
+                            </div>
+                        </div>
+                    `,
+                    'blog': `
+                        <div class="space-y-4">
+                            <p><strong>TPL Updates</strong></p>
+                            <div class="space-y-3">
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h5 class="text-yellow-400">New Geology Quests</h5>
+                                    <p class="text-sm text-gray-300">Explore rock formations and plate tectonics in our latest update for GAS students.</p>
+                                    <p class="text-xs text-gray-500">April 10, 2025</p>
+                                </div>
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h5 class="text-yellow-400">Teacher Analytics Launched</h5>
+                                    <p class="text-sm text-gray-300">Track student progress with our new web-based dashboard.</p>
+                                    <p class="text-xs text-gray-500">March 20, 2025</p>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    'help center': `
+                        <div class="space-y-4">
+                            <p><strong>Help & Support</strong></p>
+                            <p>Find solutions for using The Periodic Legends at Caloocan High School.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Getting Started</h4>
+                                    <ul class="text-sm space-y-1">
+                                        <li>Download and install the Android app</li>
+                                        <li>Register with your Student ID</li>
+                                        <li>Navigate the main menu and start quests</li>
+                                    </ul>
+                                </div>
+                                <div class="glass-effect p-3 rounded-lg">
+                                    <h4 class="text-yellow-400 mb-2">Troubleshooting</h4>
+                                    <ul class="text-sm space-y-1">
+                                        <li>Login issues: Check internet and credentials</li>
+                                        <li>Quiz sync errors: Ensure stable Wi-Fi</li>
+                                        <li>Contact support for app crashes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="text-sm">For detailed guides, contact support@periodiclegends.com</p>
+                        </div>
+                    `,
+                    'privacy policy': `
+                        <div class="space-y-4 prose prose-invert max-w-none">
+                            <h3>Privacy Policy</h3>
+                            <p>The Periodic Legends respects your privacy and is committed to protecting personal data of GAS students and teachers at Caloocan High School.</p>
+                            <h4>Data We Collect</h4>
+                            <ul>
+                                <li>Student ID and name</li>
+                                <li>Quiz performance and quest progress</li>
+                                <li>Device information (e.g., Android version)</li>
+                                <li>Usage analytics for educational insights</li>
+                            </ul>
+                            <h4>How We Use Data</h4>
+                            <p>Data is used to track learning progress, provide personalized feedback, and improve the app. No data is shared with third parties except for educational purposes within Caloocan High School.</p>
+                            <p><strong>Last updated:</strong> April 2025</p>
+                        </div>
+                    `,
+                    'terms of service': `
+                        <div class="space-y-4">
+                            <h3 class="text-yellow-400">Terms of Service</h3>
+                            <p>By using The Periodic Legends, you agree to these terms for educational use at Caloocan High School.</p>
+                            <div class="glass-effect p-3 rounded-lg">
+                                <h4 class="text-yellow-400 mb-2">Key Terms:</h4>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li>For GAS students and teachers only</li>
+                                    <li>No commercial use or redistribution</li>
+                                    <li>Requires internet for full functionality</li>
+                                    <li>Account termination for misuse</li>
+                                </ul>
+                            </div>
+                            <p class="text-sm">Contact admin@periodiclegends.com for inquiries.</p>
+                        </div>
+                    `
+                };
+                
+                let content = '<p class="text-gray-400">Content not available yet.</p>';
+                for (const [key, value] of Object.entries(footerContent)) {
+                    if (linkText.includes(key)) {
+                        content = value;
+                        break;
+                    }
+                }
+                
+                openFooterModal(this.textContent.trim(), content);
+            });
+        });
+        // Close footer modal on click outside
+        document.getElementById('footerModals').addEventListener('click', function(e) {
+            if (e.target.id === 'footerModals') {
+                closeFooterModal();
+            }
+        });
+        // Initialize Supabase Client
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(
+                'https://kckasgowvaguzkdlpdyw.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtja2FzZ293dmFndXprZGxwZHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1NjYxMTYsImV4cCI6MjA1ODE0MjExNn0.XEz-ctZwaduNZw0vtYySSVgBkF7mseKLbBtk2_ABRX8'
+            );
+            console.log("Supabase initialized:");
+        } catch (err) {
+            console.error("Supabase initialization failed:", err);
+        }
+        // Unified Login Function - checks both student and teacher tables
+        async function loginUnified() {
+            const userId = document.getElementById("user-id")?.value?.trim() || "";
+            const password = document.getElementById("user-password")?.value;
+            const messageBox = document.getElementById("message");
+
+            if (!messageBox) {
+                console.error("Message box not found");
+                return;
+            }
+
+            // Validate user ID is exactly 6 numbers
+            if (!userId || userId.length !== 6 || !/^[0-9]{6}$/.test(userId)) {
+                messageBox.textContent = "⚠️ ID must be exactly 6 numbers.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+                return;
+            }
+
+            if (!userId || !password) {
+                messageBox.textContent = "⚠️ Please enter both ID and Password.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+                return;
+            }
+
+            if (!supabase) {
+                messageBox.textContent = "⚠️ Database connection not initialized.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+                console.error("Supabase client not initialized");
+                return;
+            }
+
+            try {
+                // First, try to find the user as a student
+                let { data: studentData, error: studentError } = await supabase
+                    .from("student")
+                    .select("student_id, full_name, password, password_salt")
+                    .eq("student_id", userId)
+                    .single();
+
+                // If found as student, verify password
+                if (!studentError && studentData) {
+                    const hashedInputPassword = await hashPassword(password, studentData.password_salt);
+                    
+                    if (hashedInputPassword === studentData.password) {
+                        messageBox.textContent = "✅ Login Successful! Redirecting...";
+                        messageBox.classList.remove("text-red-500");
+                        messageBox.classList.add("text-green-500");
+
+                        const firstName = studentData.full_name.split(" ")[0];
+                        localStorage.setItem("studentId", studentData.student_id);
+                        localStorage.setItem("studentFirstName", firstName);
+
+                        setTimeout(() => {
+                            window.location.href = "Student_Dashboard.html";
+                        }, 1500);
+                        return;
+                    }
+                }
+
+                // If not found as student or password doesn't match, try teacher
+                let { data: teacherData, error: teacherError } = await supabase
+                    .from("teacher")
+                    .select("teacher_id, full_name, password, password_salt")
+                    .eq("teacher_id", userId)
+                    .single();
+
+                // If found as teacher, verify password
+                if (!teacherError && teacherData) {
+                    const hashedInputPassword = await hashPassword(password, teacherData.password_salt);
+                    
+                    if (hashedInputPassword === teacherData.password) {
+                        messageBox.textContent = "✅ Login Successful! Redirecting...";
+                        messageBox.classList.remove("text-red-500");
+                        messageBox.classList.add("text-green-500");
+
+                        const firstName = teacherData.full_name.split(" ")[0];
+                        localStorage.setItem("teacherId", teacherData.teacher_id);
+                        localStorage.setItem("teacherFirstName", firstName);
+
+                        setTimeout(() => {
+                            window.location.href = "Teacher_Dashboard.html";
+                        }, 1500);
+                        return;
+                    }
+                }
+
+                // If we reach here, credentials are invalid
+                messageBox.textContent = "❌ Invalid ID or Password.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+            } catch (err) {
+                console.error("Login Error:", err);
+                messageBox.textContent = "⚠️ An error occurred. Please try again later.";
+                messageBox.classList.add("text-red-500");
+                messageBox.classList.remove("text-green-500");
+            }
+        }
+        // Hash Password with Salt (SHA-256)
+        async function hashPassword(password, salt) {
+            const encoder = new TextEncoder();
+            const saltedPassword = password + salt;
+            const data = encoder.encode(saltedPassword);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(byte => byte.toString(16).padStart(2, "0"))
+                .join("");
+        }
+        // Transparent nav bar on scroll with smooth transition
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(255, 255, 255, 0.05)';
+                navbar.style.backdropFilter = 'blur(12px)';
+            } else {
+                navbar.style.background = 'rgba(255, 255, 255, 0.1)';
+                navbar.style.backdropFilter = 'blur(10px)';
+            }
+        });
+        // Mobile Menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.remove('translate-x-full');
+            });
+        }
+        const menuClose = document.getElementById('menu-close');
+        if (menuClose) {
+            menuClose.addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.add('translate-x-full');
+            });
+        }
+        // Sign in pop up
+        function toggleModal(show) {
+            const modal = document.getElementById('signInModal');
+            if (modal) {
+                modal.classList.toggle('hidden', !show);
+            }
+        }
+        // Sign in open and close
+        const signInBtn = document.getElementById('signInBtn');
+        const signInMobileBtn = document.getElementById('signInMobileBtn');
+        const closeModalBtn = document.getElementById('closeModal');
+        const signInModal = document.getElementById('signInModal');
+        if (signInBtn) {
+            signInBtn.addEventListener('click', () => toggleModal(true));
+        }
+        if (signInMobileBtn) {
+            signInMobileBtn.addEventListener('click', () => toggleModal(true));
+        }
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => toggleModal(false));
+        }
+        if (signInModal) {
+            signInModal.addEventListener('click', function(event) {
+                if (event.target === this) {
+                    toggleModal(false);
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>

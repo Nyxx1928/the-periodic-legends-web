@@ -1,0 +1,19 @@
+{
+  "name": "tailwind-css",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.3",
+    "@tailwindcss/cli": "^4.0.15",
+    "@vercel/blob": "^2.0.0",
+    "axios": "^1.12.2",
+    "express": "^5.1.0",
+    "tailwindcss": "^4.0.15"
+  }
+}
